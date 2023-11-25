@@ -4,6 +4,7 @@
 		"dev": "nodemon -e ts,js --exec ts-node -r tsconfig-paths/register ./src/index.ts"
 	},
 	"dependencies": {
+		"@types/pino": "^7.0.5",
 		"cors": "^2.8.5",
 		"crypto-js": "^4.2.0",
 		"dayjs": "^1.11.10",
@@ -11,6 +12,7 @@
 		"express-session": "^1.17.3",
 		"jsonwebtoken": "^9.0.2",
 		"pg": "^8.11.3",
+		"pino": "^8.16.2",
 		"redis": "^4.6.10",
 		"sequelize": "^6.34.0"
 	},

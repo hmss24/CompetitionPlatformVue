@@ -1,41 +1,37 @@
 import { sequelize } from "@/utils/sql";
 import { DataTypes, Model } from "sequelize";
 
-// 用户表模型
-class UserModel extends Model {
-  declare userId: string; // 用户ID（自增）
-  declare username: string; // 用户名（唯一）
+class ContestModel extends Model {
+  declare contestId: string; // 比赛ID（自增）
+  declare userId: string; // 用户ID
+  declare categoryId: string; // 类别ID
 
-  declare nickname: string; // 用户昵称
-  declare password: string; // 密码
-  declare email?: string; // 邮箱
+  declare title: string; // 标题
   declare description?: string; // 描述
+
   declare createdTime: Date; // 创建时间
-  declare updatedTime: Date; // 修改时间  
+  declare updatedTime: Date; // 修改时间
 }
 
-UserModel.init(
+ContestModel.init(
   {
-    userId: {
+    contestId: {
       type: DataTypes.BIGINT,
       primaryKey: true,
       autoIncrement: true,
       unique: true,
     },
-    username: {
-      type: DataTypes.STRING,
-      unique: true,
-    },
-    nickname: {
-      type: DataTypes.STRING,
+    userId: {
+      type: DataTypes.BIGINT,
       allowNull: false,
     },
-    password: {
-      type: DataTypes.TEXT,
+    categoryId: {
+      type: DataTypes.BIGINT,
       allowNull: false,
     },
-    email: {
+    title: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     description: {
       type: DataTypes.TEXT,
@@ -50,10 +46,10 @@ UserModel.init(
     },
   },
   {
-    tableName: "tb_users",
+    tableName: "tb_context",
     sequelize,
   }
 );
 
-UserModel.sync();
-export default UserModel;
+ContestModel.sync();
+export default ContestModel;

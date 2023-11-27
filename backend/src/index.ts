@@ -1,4 +1,4 @@
-import { errorcode, tips, white_list } from "@/utils/conf";
+import { black_list, errorcode, tips } from "@/utils/conf";
 import { redisClient } from "@/utils/redis";
 import { tokenVerify } from "@/utils/token";
 import { cookieInstance } from "@/utils/token_util";
@@ -10,6 +10,7 @@ const app = express();
 // Redis服务器
 redisClient.connect().catch((error) => {
   console.log("Cannot open redis, quiting...");
+  console.log(error);
   process.exit(1);
 });
 process.on("exit", () => redisClient.quit());
@@ -36,8 +37,7 @@ async function tokenRouteChecker(
   next: express.NextFunction
 ) {
   const { baseUrl } = req;
-  if (white_list.includes(baseUrl) || baseUrl.startsWith("/source"))
-    return next();
+  if(!black_list.includes(baseUrl)) return next();
   const { userid, token } = req.headers;
   if (userid == null || token == null)
     return resp.json({

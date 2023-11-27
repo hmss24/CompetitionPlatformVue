@@ -1,20 +1,17 @@
-export const white_list = [
-  "/user/login",
-  "/user/signup",
-  "/user/query",
-  "/user/query_id",
-  "/user/search",
+export const black_list = [
+  "/user/logout",
+  "/user/modify",
 
-  "/category/query",
-  "/category/list/",
-  "/category/list_count/",
+  "/category/add",
+  "/category/modify",
 
-  "/contest/list/",
-  "/contest/list_count/",
+  "/contest/add",
+  "/contest/delete",
+  "/contest/modify",
 
-  "/record/list/",
-  "/record/list_user/",
-  "/record/list_user_count/",
+  "/record/add",
+  "/record/delete",
+  "/record/modify",
 ];
 
 export const errorcode = {
@@ -24,6 +21,8 @@ export const errorcode = {
   BAD_ARGUMENTS: -3, // 参数错误
   NO_PERMISSION: -4, // 没有权限
   NONEXISTING: -5, // 目标不存在
+
+  FRONTEND_ERROR: -99, // 前端错误（预留给前端，后端不会发出该错误）
 
   TOKEN_FAILED: -101, // Token不存在
   TOKEN_OUTDATED: -102, // Token过期

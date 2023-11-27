@@ -1,5 +1,5 @@
 <template>
-  <NavBar> 这是一个首页 </NavBar>
+  <NavBar> 这是用来编辑比赛的 </NavBar>
 </template>
 
 <script setup lang="ts">

@@ -1,10 +1,11 @@
 import { errorcode, tips } from "@/utils/conf";
+import { type } from "os";
 
-export function getBigInt(num: any): BigInt | number | null {
-  if (num instanceof BigInt) return num;
+export function getBigInt(num: any): string | number | null {
+  if (typeof num == "bigint") return num.toString();
   else if (typeof num == "string") {
     try {
-      return BigInt(num);
+      return BigInt(num).toString();
     } catch {
       return null;
     }
@@ -12,8 +13,8 @@ export function getBigInt(num: any): BigInt | number | null {
   return null;
 }
 export function checkBigInt(num: any) {
-  if (num instanceof BigInt) return true;
-  else if (typeof num == "string") {
+  // if (typeof num == "bigint") return true;
+  if (typeof num == "string") {
     try {
       BigInt(num);
       return true;
@@ -26,7 +27,7 @@ export function checkBigInt(num: any) {
 
 export function checkUserName(username: string) {
   return (
-    username == "string" &&
+    typeof username == "string" &&
     username.length >= 1 &&
     username.length <= 50 &&
     username.search(/[\p{C}\p{Z}\p{M}\p{P}\p{S}]/u) == -1
@@ -57,7 +58,7 @@ export function checkShortString(s: string) {
 }
 export function checkLongString(s: string) {
   if (typeof s != "string") return false;
-  return s.length < 1024;
+  return s.length < 10000;
 }
 
 export function checkPermission(user: any, author: string) {
@@ -65,6 +66,7 @@ export function checkPermission(user: any, author: string) {
 }
 
 export function makeInternelError(e: Error) {
+  console.log(e);
   return {
     code: errorcode.INTERNEL_ERROR,
     msg: tips.INTERNEL_ERROR,

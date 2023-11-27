@@ -11,9 +11,7 @@ import express from "express";
 
 const router = express.Router();
 
-export async function deleteRecordsByContest(
-  contestId: string | number | BigInt
-) {
+export async function deleteRecordsByContest(contestId: string | number) {
   return await RecordModel.destroy({ where: { contestId: contestId } });
 }
 
@@ -26,7 +24,7 @@ router.post("/add", async (request, response) => {
     });
 
   const userId = request.headers["userid"];
-  const _data: { playerId: string | BigInt | number; score: number }[] =
+  const _data: { playerId: string | number; score: number }[] =
     request.body.data;
   const data = _data instanceof Array ? _data : [_data];
   if (!data.every((x) => checkBigInt(x.playerId) && typeof x.score == "number"))
@@ -68,7 +66,7 @@ router.post("/add", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const _recordIds: string | BigInt | number | (string | BigInt | number)[] =
+  const _recordIds: string | number | (string | number)[] =
     request.body.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
   if (!recordIds.every((x) => checkBigInt(recordIds)))
@@ -102,7 +100,7 @@ router.delete("/delete", async (request, response) => {
   }
 });
 
-router.delete("/delete_record_by_contest", async (request, response) => {
+router.delete("/delete_by_contest", async (request, response) => {
   const contestId = getBigInt(request.body.contestId);
   if (contestId == null)
     return response.json({
@@ -122,14 +120,14 @@ router.delete("/delete_record_by_contest", async (request, response) => {
 });
 
 router.post("/modify", async (request, response) => {
-  const _modifies: any = request.body.modifies;
-  const modifies: {
-    recordId: string | BigInt | number;
-    playerId: string | BigInt | number;
+  const _data: any = request.body.data;
+  const data: {
+    recordId?: string | number;
+    playerId?: string | number;
     score: number;
-  }[] = _modifies instanceof Array ? _modifies : [_modifies];
+  }[] = _data instanceof Array ? _data : [_data];
   if (
-    !modifies.every(
+    !data.every(
       (x) =>
         checkBigInt(x.recordId) &&
         (x.playerId == null || checkBigInt(x.playerId)) &&
@@ -140,22 +138,19 @@ router.post("/modify", async (request, response) => {
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
     });
-  const modifiesMap = new Map<
-    string,
-    [string | BigInt | number | null, number | null]
-  >();
-  for (let { recordId, playerId, score } of modifies) {
-    if (modifiesMap.has(recordId.toString()))
+  const dataMap = new Map<string, [string | number | null, number | null]>();
+  for (let { recordId, playerId, score } of data) {
+    if (dataMap.has(recordId.toString()))
       return response.json({
         code: errorcode.BAD_ARGUMENTS,
         msg: tips.BAD_ARGUMENTS,
       });
-    modifiesMap.set(recordId.toString(), [playerId, score]);
+    dataMap.set(recordId.toString(), [playerId, score]);
   }
 
   try {
     const datas = await ContestModel.findAll({
-      where: { recordId: modifies.map((x) => x.recordId) },
+      where: { recordId: data.map((x) => x.recordId) },
     });
     const userid = request.headers["userid"];
     if (!datas.every((x) => checkPermission(userid, x.userId)))
@@ -164,7 +159,7 @@ router.post("/modify", async (request, response) => {
         msg: tips.NO_PERMISSION,
       });
     for (let x of datas) {
-      const [playerId, score] = modifiesMap.get(x.contestId.toString());
+      const [playerId, score] = dataMap.get(x.contestId.toString());
       if (playerId != null) x.set("playerId", playerId);
       if (score != null) x.set("score", score);
       await x.save();
@@ -179,7 +174,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const _recordIds: string | BigInt | number | (string | BigInt | number)[] =
+  const _recordIds: string | number | (string | number)[] =
     request.body.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
   if (!recordIds.every((x) => checkBigInt(recordIds)))

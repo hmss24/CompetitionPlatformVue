@@ -172,17 +172,15 @@ router.get("/query", async (request, response) => {
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CONTEST_QUERY_SUCCESS,
-      data: {
-        contestId: svalue.contestId,
-        userId: svalue.userId,
-        categoryId: svalue.categoryId,
+      contestId: svalue.contestId,
+      userId: svalue.userId,
+      categoryId: svalue.categoryId,
 
-        title: svalue.title,
-        description: svalue.description,
+      title: svalue.title,
+      description: svalue.description,
 
-        createdTime: dayjs(svalue.createdTime).format(),
-        updatedTime: dayjs(svalue.updatedTime).format(),
-      },
+      createdTime: dayjs(svalue.createdTime).format(),
+      updatedTime: dayjs(svalue.updatedTime).format(),
     });
   } catch (e) {
     return response.json(makeInternelError(e));
@@ -190,8 +188,8 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const userId: string | null = request.body.userId;
-  const categoryId: string | null = request.body.categoryId;
+  const userId: string | number | null = request.body.userId;
+  const categoryId: string | number | null = request.body.categoryId;
   const title: string | null = request.body.title;
   if (
     (userId != null && typeof userId != "string") ||

@@ -138,7 +138,7 @@ router.post("/modify", async (request, response) => {
 
 router.get("/list", async (request, response) => {
   const userId = getBigInt(request.body.userId);
-  if (userId == null)
+  if (userId == null && request.body.userId != null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
@@ -192,7 +192,7 @@ router.get("/list", async (request, response) => {
 
 router.get("/list_count", async (request, response) => {
   const userId = getBigInt(request.body.userId);
-  if (userId != null)
+  if (userId == null && request.body.userId != null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,

@@ -40,12 +40,12 @@ router.post("/signup", async (request, response) => {
       code: errorcode.USER_REGISTER_FAILED,
       msg: tips.REGISTER_FAILED_NICKNAME_ILLEGAL,
     });
-  if (email != null || !checkEmail(email))
+  if (email != null && !checkEmail(email))
     return response.json({
       code: errorcode.USER_REGISTER_FAILED,
       msg: tips.REGISTER_FAILED_EMAIL_ILLEGAL,
     });
-  if (description != null || !checkLongString(description))
+  if (description != null && !checkLongString(description))
     return response.json({
       code: errorcode.USER_REGISTER_FAILED,
       msg: tips.REGISTER_FAILED_DESCRIPTION_ILLEGAL,
@@ -186,7 +186,7 @@ router.get("/query", async (request, response) => {
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
     });
-  if (!checkUserName(username))
+  if (userId == null && !checkUserName(username))
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,

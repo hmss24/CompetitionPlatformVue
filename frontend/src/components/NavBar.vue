@@ -7,7 +7,7 @@
         :value="''"
         style="bottom: 0; position: absolute; width: 100%"
       />
-    </NLayoutSider>
+    </NLayoutSider> 
     <NLayoutContent>
       <div style="padding: 16px">
         <slot></slot>
@@ -26,10 +26,11 @@ import {
   NLayoutFooter,
   NLayoutSider,
   type MenuOption,
-  NMenu
+  NMenu,
+NMessageProvider
 } from 'naive-ui'
 import { defineComponent, h } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+import { RouterLink, useRoute, type Router } from 'vue-router'
 
 const menuOptions: MenuOption[] = [
   {
@@ -57,7 +58,7 @@ const userMenuOptions: MenuOption[] = [
   },
   {
     key: 'login',
-    label: () => h('a', { style: 'color: blue' }, getNickname() ?? '<未登录>')
+    label: () =>  h(RouterLink,{to : {path : '/login'}} , {default: () => getNickname() ?? '<未登录>'})
   },
   {
     key: 'logout',
@@ -87,8 +88,9 @@ export default defineComponent({
     NLayoutContent,
     NLayoutFooter,
     NLayoutSider,
-    NMenu
-  },
+    NMenu,
+    NMessageProvider
+},
   setup() {
     const route = useRoute()
     function getMenu() {

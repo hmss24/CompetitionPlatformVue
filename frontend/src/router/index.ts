@@ -8,6 +8,16 @@ const ROUTERS = [
     meta: { needLogin: true }
   },
   {
+    path: '/personfile',
+    name:'personfile',
+    component: () => import('@/pages/category/index.vue'),
+  },
+  {
+    path:'/login',
+    name:'login',
+    component: () => import('@/pages/login.vue'),
+  },
+  {
     path: '/category',
     name: 'category',
     component: () => import('@/pages/category/index.vue'),

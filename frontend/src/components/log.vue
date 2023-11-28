@@ -97,8 +97,8 @@ export default defineComponent({
               return new Error('需要用户名')
             } else if (value.length >= 50) {
               return new Error('用户名过长')
-            } else if () {
-              return new Error('年龄应该超过十八岁')
+            } else if(value.search(/[\p{C}\p{Z}\p{M}\p{P}\p{S}]/u) == -1) {
+              return new Error('非法字符')
             }
             return true
           },

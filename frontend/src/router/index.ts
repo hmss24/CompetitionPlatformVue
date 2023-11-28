@@ -34,6 +34,9 @@ const ROUTERS = [
     name: 'contestEdit',
     component: () => import('@/pages/contest/edit.vue'),
     meta: { needLogin: true }
+  },
+  {
+    path: ''
   }
 ]
 

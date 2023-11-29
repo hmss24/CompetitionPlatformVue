@@ -12,7 +12,7 @@
       <div style="padding: 16px">
         <slot></slot>
       </div>
-      <NLayoutFooter bordered position="absoulute" style="height: 64px; padding: 24px">
+      <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
         ❤️ 由东华大学第9组创建 ❤️
       </NLayoutFooter>
     </NLayoutContent>
@@ -27,10 +27,9 @@ import {
   NLayoutSider,
   type MenuOption,
   NMenu,
-NMessageProvider
 } from 'naive-ui'
 import { defineComponent, h } from 'vue'
-import { RouterLink, useRoute, type Router } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 const menuOptions: MenuOption[] = [
   {

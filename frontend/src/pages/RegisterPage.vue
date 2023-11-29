@@ -1,7 +1,7 @@
 <template>
 <div class="login-bg c-center">
   <div class="form">
-    <div class="header">login</div>
+    <div class="header">register</div>
     <div class="main">
       <div class="inpbox">
         <input type="text" placeholder="username" v-model="usern" />
@@ -9,11 +9,13 @@
       <div class="inpbox">
         <input type="password" placeholder="password" v-model="userp" />
       </div>
+      <div class="inpbox">
+      </div>
     </div>
     <div class="action">
       <div class="btn" @click="handleLoginClick">Login</div>
+      <div class="btn" @click="handleRegisterClick">Register</div>
     </div>
-    <div class="btn" @click="handleRegisterClick">Register</div>
   </div>
 </div>
 </template>
@@ -27,25 +29,16 @@ import router from '@/router';
 const userp = "";
 const usern = "";
 const handleRegisterClick = () => {
-
+    
 }
 const handleLoginClick = async () => {
     try {
-        const x = await apiUserLogin({username: usern, password: userp});
-        localStorage.setItem("nickname", x.nickname);
-        localStorage.setItem("userid", x.userid);
-        localStorage.setItem("token", x.token);
-        localStorage.setItem("username", x.username);
         router.back();
     } catch (error:any) {
         if(error instanceof APIError) useMessage().error(error.msg);
         
     }
 };
-
-const background = {
-    backgroundImage: "url${require('../static/img/6CE1C14B1530CC53A70EC811E4D49709.jpg')}"
-}
 
 </script>
 
@@ -134,7 +127,8 @@ const background = {
 }
 
 .action .btn {
-    width: 60%;
+    width: 50%;
+    margin:10px;
     text-transform: uppercase;
     border: 2px solid #0e92b3;
     text-align: center;

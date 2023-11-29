@@ -9,6 +9,7 @@ import {
   checkUserName
 } from './utils'
 
+//用户注册
 export async function apiUserSignup(data: {
   username: string
   nickname: string
@@ -25,6 +26,14 @@ export async function apiUserSignup(data: {
   await request.get('/user/signup', { data: { username, nickname, password, email, description } })
 }
 
+/*
+  用户登录
+  传回四个字符串
+  用户token
+  用户id
+  用户名
+  用户昵称
+*/
 export async function apiUserLogin(data: { username: string; password: string }) {
   const { username, password } = data
   if (!checkUserName(username)) throwAPIError('用户名非法')
@@ -38,10 +47,12 @@ export async function apiUserLogin(data: { username: string; password: string })
   }
 }
 
+//用户登出
 export async function apiUserLogout() {
   await request.delete('/user/logout', { headers: generateHeader() ?? {} })
 }
 
+//用户信息修改 可修改项目：用户描述，用户邮箱，用户昵称
 export async function apiUserModify(data: {
   description?: string
   email?: string
@@ -60,7 +71,16 @@ export async function apiUserModify(data: {
     }
   )
 }
-
+//查询用户信息（用户名或用户ID）
+/*  
+  用户ID
+  用户名
+  用户昵称
+  邮箱
+  个人介绍
+  创建时间
+  更新时间
+*/
 export async function apiUserQuery(data: { username?: string; userId?: string | number }) {
   const { username, userId } = data
   if ((username == null) == (userId == null)) throwAPIError('用户ID和用户名不能同时存在或同时为空')
@@ -80,6 +100,16 @@ export async function apiUserQuery(data: { username?: string; userId?: string | 
   }
 }
 
+/** 
+  传入用户ID数组，批量查询用户相关信息
+  用户ID
+  用户名
+  用户昵称
+  邮箱
+  个人介绍
+  创建时间
+  更新时间  
+*/
 export async function apiUserQueryId(id: (string | number)[] | string | number) {
   const _id = id instanceof Array ? id : [id]
   if (!_id.every((x) => checkBigInt(x))) throwAPIError('需要整数')
@@ -96,7 +126,15 @@ export async function apiUserQueryId(id: (string | number)[] | string | number) 
     updatedTime: dayjs(x.updatedTime).toDate()
   }))
 }
-
+/**
+  @param 模糊搜索用户 传入用户昵称
+  @return 数组形式传回：用户ID
+  用户名
+  用户昵称
+  邮箱
+  个人介绍
+  创建时间
+*/
 export async function apiUserSearch(nickname: string) {
   if (!checkShortString(nickname)) throwAPIError('昵称非法')
   const res = await request.get('/user/search', {

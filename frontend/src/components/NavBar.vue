@@ -89,7 +89,6 @@ export default defineComponent({
     NLayoutFooter,
     NLayoutSider,
     NMenu,
-    NMessageProvider
 },
   setup() {
     const route = useRoute()

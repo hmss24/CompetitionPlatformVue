@@ -4,24 +4,43 @@
     <div class="header">login</div>
     <div class="main">
       <div class="inpbox">
-        <input type="text" placeholder="username" id="usern" />
+        <input type="text" placeholder="username" v-model="usern" />
       </div>
       <div class="inpbox">
-        <input type="password" placeholder="password" id="userp" />
+        <input type="password" placeholder="password" v-model="userp" />
       </div>
     </div>
     <div class="action">
-      <div class="btn" @click="handleClick">login</div>
+      <div class="btn" @click="handleLoginClick">Login</div>
     </div>
+    <div class="btn" @click="handleRegisterClick">Register</div>
   </div>
 </div>
 </template>
 
 <script setup lang="ts">
-import log from '@/components/log.vue'
 import { apiUserLogin } from '@/api/user';
-const handleClick = () => {
-    apiUserLogin
+import { useMessage } from 'naive-ui';
+import { APIError } from '@/api/request';
+import router from '@/router';
+
+const userp = "";
+const usern = "";
+const handleRegisterClick = () => {
+
+}
+const handleLoginClick = async () => {
+    try {
+        const x = await apiUserLogin({username: usern, password: userp});
+        localStorage.setItem("nickname", x.nickname);
+        localStorage.setItem("userid", x.userid);
+        localStorage.setItem("token", x.token);
+        localStorage.setItem("username", x.username);
+        router.back();
+    } catch (error:any) {
+        if(error instanceof APIError) useMessage().error(error.msg);
+        
+    }
 };
 
 const background = {
@@ -46,13 +65,17 @@ const background = {
 }
 
 .form {
-    width: 100;
+    width: 30vw;
+    height: auto;
+    margin:auto;
+    margin-top: 10%;
     background-color: rgb(41, 45, 62);
     color: #fff;
     border-radius: 2px;
     padding: 50px 80px 80px;
-    border-radius: 10px;
+    border-radius: 15px;
     box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
+    opacity: 0.9;
 }
 
 .header {

@@ -97,6 +97,7 @@ export const tips = {
   CATEGORY_MODIFY_SUCCESS: "修改类别成功",
   CATEGORY_MODIFY_FAILED_NAME_EXISTING: "修改类别失败，名称已存在",
   CATEGORY_QUERY_SUCCESS: "查询类别成功",
+  CATEGORY_QUERY_FAILED_BOTH_ID_AND_NAME: "查询类型失败，ID和名称只能指定一个",
   CATEGORY_LIST_SUCCESS: "列出类别成功",
   CATEGORY_LIST_FAILED_TOO_MANY: "列出类别失败，查询数量过多",
 

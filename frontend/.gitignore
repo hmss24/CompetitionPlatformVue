@@ -26,3 +26,6 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# 禁止上传开发时环境
+dev-config.ts

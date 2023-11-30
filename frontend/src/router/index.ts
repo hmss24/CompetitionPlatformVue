@@ -1,12 +1,17 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 
-const ROUTERS = [
+const ROUTERS: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'homepage',
     component: () => import('@/pages/index.vue'),
     meta: { needLogin: true }
   },
+  // {
+  //   path: '/personfile',
+  //   name: 'personfile',
+  //   component: () => import('@/pages/category/index.vue')
+  // },
   {
     path: '/personfile',
     name:'personfile',
@@ -20,7 +25,7 @@ const ROUTERS = [
   {
     path: '/category',
     name: 'category',
-    component: () => import('@/pages/category/index.vue'),
+    component: () => import('@/pages/category.vue'),
     meta: { needLogin: true }
   },
   {
@@ -34,12 +39,7 @@ const ROUTERS = [
     name: 'contestEdit',
     component: () => import('@/pages/contest/edit.vue'),
     meta: { needLogin: true }
-  },
-  {
-    path:'/register',
-    name:'register',
-    component: () => import('@/pages/RegisterPage.vue'),
-  },
+  }
 ]
 
 const router = createRouter({

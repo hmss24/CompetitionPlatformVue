@@ -1,5 +1,5 @@
 import UserModel from "@/models/UserModel";
-import { errorcode, tips } from "@/utils/conf";
+import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import { tokenAdd, tokenDelete } from "@/utils/token";
 import { decryptAES, encryptAES, generateToken } from "@/utils/token_util";
 import {
@@ -20,10 +20,11 @@ const router = express.Router();
 
 router.post("/signup", async (request, response) => {
   const username: string = request.body.username;
-  const nickname: string = request.body.nickname;
+  const nickname: string = request.body.nickname ?? username;
   const password: string = request.body.password;
   const email: string | null = request.body.email;
   const description: string | null = request.body.description;
+  const extra: string | null = request.body.extra;
 
   if (!checkUserName(username))
     return response.json({
@@ -142,6 +143,8 @@ router.post("/modify", async (request, response) => {
   const description: string | null = request.body.description;
   const email: string | null = request.body.email;
   const nickname: string | null = request.body.nickname;
+  const extra: string | null = request.body.extra;
+
   if (description != null && !checkLongString(description))
     return response.json({
       code: errorcode.USER_MODIFY_ERROR,
@@ -157,6 +160,11 @@ router.post("/modify", async (request, response) => {
       code: errorcode.USER_MODIFY_ERROR,
       msg: tips.USER_MODIFY_FAILED_NICKNAME_ILLEGAL,
     });
+  if (extra != null && !checkLongString(extra))
+    return response.json({
+      code: errorcode.BAD_ARGUMENTS,
+      msg: tips.BAD_ARGUMENTS,
+    });
 
   try {
     const value = await UserModel.findOne({
@@ -165,6 +173,7 @@ router.post("/modify", async (request, response) => {
     if (description != null) value.set("description", description);
     if (email != null) value.set("email", email);
     if (nickname != null) value.set("nickname", nickname);
+    if (extra != null) value.set("extra", extra);
     value.set("updatedTime", new Date());
     await value.save();
     return response.json({
@@ -209,6 +218,7 @@ router.get("/query", async (request, response) => {
       nickname: svalue.nickname,
       email: svalue.email,
       description: svalue.description,
+      extra: svalue.extra,
       createdTime: dayjs(svalue.createdTime).format(),
       updatedTime: dayjs(svalue.updatedTime).format(),
     });
@@ -236,6 +246,7 @@ router.get("/query_id", async (request, response) => {
         nickname: x.nickname,
         email: x.email,
         description: x.description,
+        extra: x.extra,
         createdTime: dayjs(x.createdTime).format(),
         updatedTime: dayjs(x.updatedTime).format(),
       })),
@@ -255,6 +266,7 @@ router.get("/search", async (request, response) => {
   try {
     const svalue = await UserModel.findAll({
       where: { nickname: { [Op.like]: `%${nickname}%` } },
+      limit: QUERY_MAX_LIMIT,
     });
     return response.json({
       code: errorcode.SUCCESS,
@@ -265,6 +277,7 @@ router.get("/search", async (request, response) => {
         nickname: x.nickname,
         email: x.email,
         description: x.description,
+        extra: x.extra,
         createdTime: dayjs(x.createdTime).format(),
         updatedTime: dayjs(x.updatedTime).format(),
       })),

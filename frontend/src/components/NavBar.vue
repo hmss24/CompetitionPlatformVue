@@ -7,12 +7,12 @@
         :value="''"
         style="bottom: 0; position: absolute; width: 100%"
       />
-    </NLayoutSider> 
+    </NLayoutSider>
     <NLayoutContent>
-      <div style="padding: 16px">
+      <div style="padding: 24px">
         <slot></slot>
       </div>
-      <NLayoutFooter bordered position="absoulute" style="height: 64px; padding: 24px">
+      <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
         ❤️ 由东华大学第9组创建 ❤️
       </NLayoutFooter>
     </NLayoutContent>
@@ -27,7 +27,7 @@ import {
   NLayoutSider,
   type MenuOption,
   NMenu,
-NMessageProvider
+  NMessageProvider
 } from 'naive-ui'
 import { defineComponent, h } from 'vue'
 import { RouterLink, useRoute, type Router } from 'vue-router'
@@ -58,7 +58,8 @@ const userMenuOptions: MenuOption[] = [
   },
   {
     key: 'login',
-    label: () =>  h(RouterLink,{to : {path : '/login'}} , {default: () => getNickname() ?? '<未登录>'})
+    label: () =>
+      h(RouterLink, { to: { path: '/login' } }, { default: () => getNickname() ?? '<未登录>' })
   },
   {
     key: 'logout',
@@ -88,8 +89,8 @@ export default defineComponent({
     NLayoutContent,
     NLayoutFooter,
     NLayoutSider,
-    NMenu,
-},
+    NMenu
+  },
   setup() {
     const route = useRoute()
     function getMenu() {

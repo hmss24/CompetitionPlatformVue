@@ -1,26 +1,16 @@
 import dayjs from 'dayjs'
-import request, { generateHeader, throwAPIError } from './request'
+import request, { APIError, generateHeader } from './request'
 import { checkBigInt, checkLongString, checkShortString } from './utils'
 
-
-/*
-  添加比赛
-  传入：
-    类别ID
-    标题
-    描述
-  传回：
-    比赛ID
-*/
 export async function apiContestAdd(conf: {
   categoryId: string | number
   title: string
   description?: string
 }) {
   const { categoryId, title, description } = conf
-  if (!checkBigInt(categoryId)) throwAPIError('类型ID非法')
-  if (!checkShortString(title)) throwAPIError('标题非法')
-  if (description != null && !checkLongString(description)) throwAPIError('描述非法')
+  if (!checkBigInt(categoryId)) throw new APIError('类型ID非法')
+  if (!checkShortString(title)) throw new APIError('标题非法')
+  if (description != null && !checkLongString(description)) throw new APIError('描述非法')
   return (
     await request.post(
       '/contest/add',
@@ -31,7 +21,7 @@ export async function apiContestAdd(conf: {
 }
 
 export async function apiContestDelete(contestId: number | string) {
-  if (!checkBigInt(contestId)) throwAPIError('比赛ID非法')
+  if (!checkBigInt(contestId)) throw new APIError('比赛ID非法')
   await request.delete('/contest/delete', { data: { contestId }, headers: generateHeader() ?? {} })
   return
 }
@@ -42,10 +32,10 @@ export async function apiContestModify(conf: {
   title?: string
   description?: string
 }) {
-  if (!checkBigInt(conf.contestId)) throwAPIError('比赛ID非法')
-  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throwAPIError('类别ID非法')
-  if (conf.title != null && !checkShortString(conf.title)) throwAPIError('标题非法')
-  if (conf.description != null && !checkLongString(conf.description)) throwAPIError('描述非法')
+  if (!checkBigInt(conf.contestId)) throw new APIError('比赛ID非法')
+  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
+  if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
+  if (conf.description != null && !checkLongString(conf.description)) throw new APIError('描述非法')
   if (conf.categoryId == null && conf.title == null && conf.description == null) return
   await request.post(
     '/contest/modify',
@@ -61,7 +51,7 @@ export async function apiContestModify(conf: {
 }
 
 export async function apiContestQuery(id: number | string) {
-  if (!checkBigInt(id)) throwAPIError('比赛ID非法')
+  if (!checkBigInt(id)) throw new APIError('比赛ID非法')
   const x = (await request.get('/contest/query', {})).data
   return {
     contestId: x.contestId as string,
@@ -81,9 +71,9 @@ export async function apiContestList(conf: {
   start?: number
   lim?: number
 }) {
-  if (conf.userId != null && !checkBigInt(conf.userId)) throwAPIError('用户ID非法')
-  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throwAPIError('类别ID非法')
-  if (conf.title != null && !checkShortString(conf.title)) throwAPIError('标题非法')
+  if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
+  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
+  if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
   return (
     (
       await request.get('/contest/list', {
@@ -114,9 +104,9 @@ export async function apiContestListCount(conf: {
   start?: number
   lim?: number
 }) {
-  if (conf.userId != null && !checkBigInt(conf.userId)) throwAPIError('用户ID非法')
-  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throwAPIError('类别ID非法')
-  if (conf.title != null && !checkShortString(conf.title)) throwAPIError('标题非法')
+  if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
+  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
+  if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
   return (
     await request.get('/contest/list_count', {
       data: {

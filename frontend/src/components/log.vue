@@ -11,12 +11,7 @@
         @keydown.enter.prevent
       />
     </n-form-item>
-    <n-form-item
-      ref="rPasswordFormItemRef"
-      first
-      path="reenteredPassword"
-      label="重复密码"
-    >
+    <n-form-item ref="rPasswordFormItemRef" first path="reenteredPassword" label="重复密码">
       <n-input
         v-model:value="model.reenteredPassword"
         :disabled="!model.password"
@@ -39,7 +34,6 @@
       </n-col>
     </n-row>
   </n-form>
-
 </template>
 
 <script lang="ts">
@@ -51,7 +45,7 @@ import {
   useMessage,
   type FormRules
 } from 'naive-ui'
-import { NForm, NFormItem, NInput,NButton } from 'naive-ui'
+import { NForm, NFormItem, NInput, NButton } from 'naive-ui'
 
 interface ModelType {
   username: string | null
@@ -66,7 +60,7 @@ export default defineComponent({
     NFormItem,
     NInput
   },
-  setup () {
+  setup() {
     const formRef = ref<FormInst | null>(null)
     const rPasswordFormItemRef = ref<FormItemInst | null>(null)
     const message = useMessage()
@@ -75,29 +69,26 @@ export default defineComponent({
       password: null,
       reenteredPassword: null
     })
-    function validatePasswordStartWith (
-      rule: FormItemRule,
-      value: string
-    ): boolean {
+    function validatePasswordStartWith(rule: FormItemRule, value: string): boolean {
       return (
         !!modelRef.value.password &&
         modelRef.value.password.startsWith(value) &&
         modelRef.value.password.length >= value.length
       )
     }
-    function validatePasswordSame (rule: FormItemRule, value: string): boolean {
+    function validatePasswordSame(rule: FormItemRule, value: string): boolean {
       return value === modelRef.value.password
     }
     const rules: FormRules = {
       username: [
         {
           required: true,
-          validator (rule: FormItemRule, value: string) {
+          validator(rule: FormItemRule, value: string) {
             if (!value) {
               return new Error('需要用户名')
             } else if (value.length >= 50) {
               return new Error('用户名过长')
-            } else if(value.search(/[\p{C}\p{Z}\p{M}\p{P}\p{S}]/u) == -1) {
+            } else if (value.search(/[\p{C}\p{Z}\p{M}\p{P}\p{S}]/u) == -1) {
               return new Error('非法字符')
             }
             return true
@@ -134,12 +125,12 @@ export default defineComponent({
       rPasswordFormItemRef,
       model: modelRef,
       rules,
-      handlePasswordInput () {
+      handlePasswordInput() {
         if (modelRef.value.reenteredPassword) {
           rPasswordFormItemRef.value?.validate({ trigger: 'password-input' })
         }
       },
-      handleValidateButtonClick (e: MouseEvent) {
+      handleValidateButtonClick(e: MouseEvent) {
         e.preventDefault()
         formRef.value?.validate((errors) => {
           if (!errors) {

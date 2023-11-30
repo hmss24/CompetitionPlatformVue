@@ -1,4 +1,4 @@
-import request, { generateHeader, throwAPIError } from './request'
+import request, { APIError, generateHeader } from './request'
 import { checkBigInt } from './utils'
 
 export async function apiRecordAdd(conf: {
@@ -8,9 +8,9 @@ export async function apiRecordAdd(conf: {
     | { playerId: string | number; score: number }
 }) {
   const data = conf.data instanceof Array ? conf.data : [conf.data]
-  if (!checkBigInt(conf.contestId)) throwAPIError('比赛ID非法')
+  if (!checkBigInt(conf.contestId)) throw new APIError('比赛ID非法')
   if (!data.every((x) => checkBigInt(x.playerId) && typeof x.score == 'number'))
-    throwAPIError('记录形式错误')
+    throw new APIError('记录形式错误')
   return (
     await request.post(
       '/record/add',
@@ -22,13 +22,13 @@ export async function apiRecordAdd(conf: {
 
 export async function apiRecordDelete(ids: (string | number)[] | string | number) {
   const recordId = ids instanceof Array ? ids : [ids]
-  if (!recordId.every((x) => checkBigInt(x))) throwAPIError('记录ID非法')
+  if (!recordId.every((x) => checkBigInt(x))) throw new APIError('记录ID非法')
   await request.delete('/record/delete', { data: { recordId }, headers: generateHeader() ?? {} })
   return
 }
 
 export async function apiRecordDeleteByContest(contestId: string | number) {
-  if (!checkBigInt(contestId)) throwAPIError('比赛ID非法')
+  if (!checkBigInt(contestId)) throw new APIError('比赛ID非法')
   await request.delete('/record/delete_by_contest', {
     data: { contestId },
     headers: generateHeader() ?? {}
@@ -48,14 +48,14 @@ export async function apiRecordModify(
         (x.playerId == null || checkBigInt(x.playerId)) && (x.score == null || checkBigInt(x.score))
     )
   )
-    throwAPIError('记录形式错误')
+    throw new APIError('记录形式错误')
   await request.post('/record/modify', { data }, { headers: generateHeader() ?? {} })
   return
 }
 
 export async function apiRecordQuery(recordId: (string | number)[] | string | number) {
   recordId = recordId instanceof Array ? recordId : [recordId]
-  if (!recordId.every((x) => checkBigInt(x))) throwAPIError('记录ID非法')
+  if (!recordId.every((x) => checkBigInt(x))) throw new APIError('记录ID非法')
   return ((await request.get('/record/query', { data: { recordId } })).data.data as any[]).map(
     (x) => ({
       recordId: x.recordId as string,
@@ -67,7 +67,7 @@ export async function apiRecordQuery(recordId: (string | number)[] | string | nu
 }
 
 export async function apiRecordList(contestId: string | number) {
-  if (!checkBigInt(contestId)) throwAPIError('比赛ID非法')
+  if (!checkBigInt(contestId)) throw new APIError('比赛ID非法')
   return ((await request.get('/record/list', { data: { contestId } })).data.data as any[]).map(
     (x) => ({
       recordId: x.recordId as string,
@@ -83,7 +83,7 @@ export async function apiRecordListByUser(conf: {
   start?: number
   lim?: number
 }) {
-  if (!checkBigInt(conf.playerId)) throwAPIError('选手ID非法')
+  if (!checkBigInt(conf.playerId)) throw new APIError('选手ID非法')
   return (
     (
       await request.get('/record/list_user', {
@@ -99,7 +99,7 @@ export async function apiRecordListByUser(conf: {
 }
 
 export async function apiRecordListByUserCount(playerId: string | number) {
-  if (!checkBigInt(playerId)) throwAPIError('选手ID非法')
+  if (!checkBigInt(playerId)) throw new APIError('选手ID非法')
   return (
     await request.get('/record/list_user', {
       data: { playerId }

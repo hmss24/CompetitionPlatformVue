@@ -8,10 +8,10 @@
         style="bottom: 0; position: absolute; width: 100%"
       />
     </NLayoutSider>
-    <NLayoutContent>
-      <div style="padding: 24px">
+    <NLayoutContent has-sider>
+      <NLayout style="padding: 24px; width: 100%; height: calc(100% - 64px);" :native-scrollbar="false">
         <slot></slot>
-      </div>
+      </NLayout>
       <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
         ❤️ 由东华大学第9组创建 ❤️
       </NLayoutFooter>
@@ -27,10 +27,9 @@ import {
   NLayoutSider,
   type MenuOption,
   NMenu,
-  NMessageProvider
 } from 'naive-ui'
 import { defineComponent, h } from 'vue'
-import { RouterLink, useRoute, type Router } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 const menuOptions: MenuOption[] = [
   {

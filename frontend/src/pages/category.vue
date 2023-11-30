@@ -16,7 +16,7 @@
         <NButton color="#4caf50" round @click="handleRefreshClick">刷新</NButton>
       </NSpace>
     </div>
-    <NDataTable :columns="tableColumns" :data="tableData" />
+    <NDataTable :columns="tableColumns" :data="tableData" :pagination="paginationProp" />
 
     <NModal v-model:show="shouldShowModal" :auto-focus="false" :mask-closable="false">
       <NCard
@@ -67,10 +67,39 @@ import {
   NCard,
   NForm,
   NFormItem,
-  type FormRules
+  type FormRules,
+  type PaginationProps
 } from 'naive-ui'
 
 const $message = useMessage()
+
+const paginationProp = reactive<PaginationProps>({
+  pageSize: 10,
+  showSizePicker: true,
+  showQuickJumper: true,
+  pageSizes: [
+    {
+      label: '10 条 / 页',
+      value: 10
+    },
+    {
+      label: '20 条 / 页',
+      value: 20
+    },
+    {
+      label: '50 条 / 页',
+      value: 30
+    },
+    {
+      label: '100 条 / 页',
+      value: 40
+    }
+  ],
+  onUpdatePageSize(pageSize) {
+    paginationProp.pageSize = pageSize;
+    paginationProp.page = 1;
+  }
+})
 
 const shouldShowModal = ref(false)
 const modelForm = ref({ name: '', description: '' })
@@ -148,6 +177,7 @@ const tableColumns: DataTableColumns = [
     key: 'name',
     resizable: true,
     width: 100,
+    minWidth: 75,
     sorter: (a, b) => (a.name as string).localeCompare(b.name as string)
   },
   {
@@ -199,7 +229,7 @@ const handleSearchKeyup = async (x: KeyboardEvent) => {
 
 <script lang="tsx">
 import { apiCategoryAdd, apiCategoryList, apiCategoryModify } from '@/api/category'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 import { APIError, getAPIErrorInfo } from '@/api/request'
 
 let rawtableData: Awaited<ReturnType<typeof apiCategoryList>> = []

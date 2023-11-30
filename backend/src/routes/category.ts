@@ -1,4 +1,5 @@
 import CategoryModel from "@/models/CategoryModel";
+import ContestModel from "@/models/ContestModel";
 import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import {
   checkBigInt,
@@ -9,7 +10,7 @@ import {
   makeInternelError,
 } from "@/utils/utils";
 import dayjs from "dayjs";
-import express from "express";
+import express, { response } from "express";
 import { Op, ValidationError } from "sequelize";
 
 const router = express.Router();
@@ -143,6 +144,49 @@ router.post("/modify", async (request, response) => {
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CATEGORY_MODIFY_SUCCESS,
+    });
+  } catch (e) {
+    if (e instanceof ValidationError)
+      if (e.errors.some((x) => x.type == "unique violation"))
+        return response.json({
+          code: errorcode.CATEGORY_MODIFY_ERROR,
+          msg: tips.CATEGORY_MODIFY_FAILED_NAME_EXISTING,
+        });
+    return response.json(makeInternelError(e));
+  }
+});
+
+router.delete("/delete", async (request, response) => {
+  const categoryId = getBigInt(request.body.categoryId);
+  if (categoryId == null)
+    return response.json({
+      code: errorcode.BAD_ARGUMENTS,
+      msg: tips.BAD_ARGUMENTS,
+    });
+
+  try {
+    if ((await ContestModel.findOne({ where: { categoryId } })) != null)
+      return response.json({
+        code: errorcode.CATEGORY_DELETE_ERROR,
+        msg: tips.CATEGORY_DELETE_FAILED_OCCUPIED,
+      });
+    const svalue = await CategoryModel.findOne({
+      where: { categoryId },
+    });
+    if (svalue == null)
+      return response.json({
+        code: errorcode.NONEXISTING,
+        msg: tips.NONEXISTING,
+      });
+    if (!checkPermission(request.headers["userid"], svalue.userId))
+      return response.json({
+        code: errorcode.NO_PERMISSION,
+        msg: tips.NO_PERMISSION,
+      });
+    await svalue.destroy();
+    return response.json({
+      code: errorcode.SUCCESS,
+      msg: tips.CATEGORY_DELETE_SUCCESS,
     });
   } catch (e) {
     if (e instanceof ValidationError)

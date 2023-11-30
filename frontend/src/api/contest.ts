@@ -2,6 +2,16 @@ import dayjs from 'dayjs'
 import request, { generateHeader, throwAPIError } from './request'
 import { checkBigInt, checkLongString, checkShortString } from './utils'
 
+
+/*
+  添加比赛
+  传入：
+    类别ID
+    标题
+    描述
+  传回：
+    比赛ID
+*/
 export async function apiContestAdd(conf: {
   categoryId: string | number
   title: string

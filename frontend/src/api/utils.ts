@@ -24,7 +24,7 @@ export function checkBigInt(num: any) {
 
 export function checkUserName(username: string) {
   return (
-    username == 'string' &&
+    typeof username == 'string' &&
     username.length >= 1 &&
     username.length <= 50 &&
     username.search(/[\p{C}\p{Z}\p{M}\p{P}\p{S}]/u) == -1

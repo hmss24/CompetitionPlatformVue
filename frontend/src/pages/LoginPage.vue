@@ -40,7 +40,7 @@ const $msg = useMessage();
 
 const close = ref('closeicon');
 
-let status = ref(true);
+let status = ref(false);
 
 const handleCloseClick = async() => {
     router.back();
@@ -127,9 +127,9 @@ const handleLoginClick = async () => {
 
 .form > .n-icon {
     color: #fff;
-    position: absolute;
-    left: 70%;
-    top: 22%;
+    position: relative;
+    left: 100%;
+    top: 0%;
     cursor: pointer;
 }
 

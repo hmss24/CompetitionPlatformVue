@@ -96,8 +96,8 @@ const paginationProp = reactive<PaginationProps>({
     }
   ],
   onUpdatePageSize(pageSize) {
-    paginationProp.pageSize = pageSize;
-    paginationProp.page = 1;
+    paginationProp.pageSize = pageSize
+    paginationProp.page = 1
   }
 })
 
@@ -106,9 +106,9 @@ const modelForm = ref({ name: '', description: '' })
 const modelTitle = ref('新增分类')
 const handleRefreshClick = async () => {
   try {
+    tableData.value = [];
     rawtableData = await apiCategoryList({})
     tableData.value = rawtableData.filter((x) => x.name.includes(searchText.value))
-    $message.success('刷新成功')
   } catch (e) {
     if (e instanceof APIError) $message.error(e.msg)
     else {
@@ -170,6 +170,15 @@ const showEditModal = (entry: modelType) => {
   modelSource = entry
   shouldShowModal.value = true
 }
+const deleteCategory = async (entry: modelType) => {
+  try {
+    await apiCategoryDelete(entry.categoryId)
+    $message.success('删除类别成功')
+    handleRefreshClick()
+  } catch (e) {
+    $message.error(getAPIErrorInfo(e))
+  }
+}
 
 const tableColumns: DataTableColumns = [
   {
@@ -189,7 +198,7 @@ const tableColumns: DataTableColumns = [
   {
     title: '操作',
     key: '<operation>',
-    width: 80,
+    width: 150,
     render: (x, _) => {
       return (
         <NSpace>
@@ -198,6 +207,13 @@ const tableColumns: DataTableColumns = [
             onClick={() => showEditModal(x as any)}
           >
             编辑
+          </NButton>
+          <NButton
+            type="error"
+            disabled={localStorage.getItem('userid') != x.userId}
+            onClick={() => deleteCategory(x as any)}
+          >
+            删除
           </NButton>
         </NSpace>
       )
@@ -228,7 +244,12 @@ const handleSearchKeyup = async (x: KeyboardEvent) => {
 </script>
 
 <script lang="tsx">
-import { apiCategoryAdd, apiCategoryList, apiCategoryModify } from '@/api/category'
+import {
+  apiCategoryAdd,
+  apiCategoryDelete,
+  apiCategoryList,
+  apiCategoryModify
+} from '@/api/category'
 import { reactive, ref } from 'vue'
 import { APIError, getAPIErrorInfo } from '@/api/request'
 

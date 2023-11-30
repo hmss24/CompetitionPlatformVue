@@ -40,6 +40,7 @@ export const errorcode = {
   CATEGORY_MODIFY_ERROR: -202, // 修改类别失败
   CATEGORY_QUERY_ERROR: -203, // 查询类别失败
   CATEGORY_LIST_ERROR: -204, // 列出类别失败
+  CATEGORY_DELETE_ERROR: -205, // 添加类别失败
 
   CONTEST_ADD_ERROR: -251, // 添加比赛失败
   CONTEST_DELETE_ERROR: -252, // 删除比赛失败
@@ -100,6 +101,9 @@ export const tips = {
   CATEGORY_QUERY_FAILED_BOTH_ID_AND_NAME: "查询类型失败，ID和名称只能指定一个",
   CATEGORY_LIST_SUCCESS: "列出类别成功",
   CATEGORY_LIST_FAILED_TOO_MANY: "列出类别失败，查询数量过多",
+  CATEGORY_DELETE_SUCCESS: "删除类别成功",
+  CATEGORY_DELETE_FAILED_OCCUPIED:
+    "删除类别失败，类别被占用，请删除所有使用此类别的比赛",
 
   CONTEST_ADD_SUCCESS: "添加比赛成功",
   CONTEST_DELETE_SUCCESS: "删除比赛成功",

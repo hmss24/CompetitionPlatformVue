@@ -52,6 +52,15 @@ export async function apiCategoryModify(conf: {
   return
 }
 
+export async function apiCategoryDelete(categoryId: string | number) {
+  if (!checkBigInt(categoryId)) throw new APIError('类别ID非法')
+  await request.delete('/category/delete', {
+    data: { categoryId },
+    headers: generateHeader() ?? {}
+  })
+  return
+}
+
 export async function apiCategoryList(conf: {
   userId?: string | number
   start?: number

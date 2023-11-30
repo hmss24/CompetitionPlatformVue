@@ -9,7 +9,7 @@
       />
     </NLayoutSider>
     <NLayoutContent has-sider>
-      <NLayout style="padding: 24px; width: 100%; height: calc(100% - 64px);" :native-scrollbar="false">
+      <NLayout style="height: calc(100% - 64px);" content-style="padding: 24px; " :native-scrollbar="false">
         <slot></slot>
       </NLayout>
       <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">

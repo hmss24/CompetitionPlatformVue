@@ -133,6 +133,9 @@ const handleLoginClick = async () => {
         position: relative;
         cursor: pointer;
     }
+    .n-icon:hover {
+        color:#03a9f4
+    }
   }
 
   .main {

@@ -17,9 +17,9 @@ export async function apiUserSignup(data: {
   description?: string
 }) {
   const { username, nickname, password, email, description } = data
-  if (!checkUserName(username)) throw new APIError('用户名非法')
+  if (!checkUserName(username)) throw new APIError('用户名非法\n，必须在1-50个字符以内')
   if (!checkShortString(nickname)) throw new APIError('昵称非法')
-  if (!checkPassword(password)) throw new APIError('密码非法')
+  if (!checkPassword(password)) throw new APIError('密码非法\n长度8-50，必须至少含有1个大写字母，1个小写字母和1个数字')
   if (email != null && !checkEmail(email)) throw new APIError('邮箱非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
   await request.get('/user/signup', { data: { username, nickname, password, email, description } })
@@ -28,7 +28,7 @@ export async function apiUserSignup(data: {
 export async function apiUserLogin(data: { username: string; password: string }) {
   const { username, password } = data
   if (!checkUserName(username)) throw new APIError('用户名非法')
-  if (!checkPassword(password)) throw new APIError('密码非法')
+  if (!checkPassword(password)) throw new APIError('密码非法\n长度8-50，必须至少含有1个大写字母，1个小写字母和1个数字')
   const res = await request.post('/user/login', { username, password })
   return {
     token: res.headers['token'] as string,

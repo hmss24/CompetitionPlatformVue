@@ -7,15 +7,10 @@ const ROUTERS: RouteRecordRaw[] = [
     component: () => import('@/pages/index.vue'),
     meta: { needLogin: true }
   },
-  // {
-  //   path: '/personfile',
-  //   name: 'personfile',
-  //   component: () => import('@/pages/category/index.vue')
-  // },
   {
-    path: '/login',
-    name: 'login',
-    component: () => import('@/pages/login.vue')
+    path:'/login',
+    name:'login',
+    component: () => import('@/pages/LoginPage.vue'),
   },
   {
     path: '/category',
@@ -34,7 +29,12 @@ const ROUTERS: RouteRecordRaw[] = [
     name: 'contestEdit',
     component: () => import('@/pages/contest/edit.vue'),
     meta: { needLogin: true }
-  }
+  },
+  {
+    path:'/register',
+    name:'register',
+    component: () => import('@/pages/RegisterPage.vue'),
+  },
 ]
 
 const router = createRouter({

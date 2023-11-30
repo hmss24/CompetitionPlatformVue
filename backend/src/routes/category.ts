@@ -1,6 +1,7 @@
 import CategoryModel from "@/models/CategoryModel";
 import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import {
+  checkBigInt,
   checkLongString,
   checkPermission,
   checkShortString,
@@ -9,20 +10,38 @@ import {
 } from "@/utils/utils";
 import dayjs from "dayjs";
 import express from "express";
-import { ValidationError } from "sequelize";
+import { Op, ValidationError } from "sequelize";
 
 const router = express.Router();
 
 router.get("/query", async (request, response) => {
-  const categoryId = getBigInt(request.body.categoryId);
-  if (categoryId == null)
+  const categoryId: string | number = request.body.categoryId;
+  const name: string = request.body.name;
+  if (!checkBigInt(categoryId) && request.body.categoryId != null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
     });
+  if (!checkShortString(name) && request.body.name != null)
+    return response.json({
+      code: errorcode.BAD_ARGUMENTS,
+      msg: tips.BAD_ARGUMENTS,
+    });
+  if (categoryId == null && name == null)
+    return response.json({
+      code: errorcode.BAD_ARGUMENTS,
+      msg: tips.BAD_ARGUMENTS,
+    });
+  if (categoryId != null && name != null)
+    return response.json({
+      code: errorcode.CATEGORY_QUERY_ERROR,
+      msg: tips.CATEGORY_QUERY_FAILED_BOTH_ID_AND_NAME,
+    });
 
   try {
-    const svalue = await CategoryModel.findOne({ where: { categoryId } });
+    const svalue = await CategoryModel.findOne({
+      where: categoryId != null ? { categoryId } : { name },
+    });
     if (svalue == null)
       return response.json({
         code: errorcode.NONEXISTING,
@@ -132,6 +151,36 @@ router.post("/modify", async (request, response) => {
           code: errorcode.CATEGORY_MODIFY_ERROR,
           msg: tips.CATEGORY_MODIFY_FAILED_NAME_EXISTING,
         });
+    return response.json(makeInternelError(e));
+  }
+});
+
+router.get("/search", async (request, response) => {
+  const name: string = request.body.name;
+  if (!checkShortString(name))
+    return response.json({
+      code: errorcode.BAD_ARGUMENTS,
+      msg: tips.BAD_ARGUMENTS,
+    });
+
+  try {
+    const svalue = await CategoryModel.findAll({
+      where: { name: { [Op.like]: `%${name}%` } },
+      limit: QUERY_MAX_LIMIT,
+    });
+    return response.json({
+      code: errorcode.SUCCESS,
+      msg: tips.CATEGORY_QUERY_SUCCESS,
+      data: svalue.map((x) => ({
+        categoryId: x.categoryId,
+        userId: x.userId,
+        name: x.name,
+        description: x.description,
+        createdTime: dayjs(x.createdTime).format(),
+        updatedTime: dayjs(x.updatedTime).format(),
+      })),
+    });
+  } catch (e) {
     return response.json(makeInternelError(e));
   }
 });

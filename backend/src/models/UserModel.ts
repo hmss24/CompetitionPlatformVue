@@ -10,8 +10,10 @@ class UserModel extends Model {
   declare password: string; // 密码
   declare email?: string; // 邮箱
   declare description?: string; // 描述
+  declare extra?: string; // 冗余字段
+
   declare createdTime: Date; // 创建时间
-  declare updatedTime: Date; // 修改时间  
+  declare updatedTime: Date; // 修改时间
 }
 
 UserModel.init(
@@ -39,6 +41,9 @@ UserModel.init(
     },
     description: {
       type: DataTypes.TEXT,
+    },
+    extra: {
+      type: DataTypes.TEXT
     },
     createdTime: {
       type: DataTypes.DATE,

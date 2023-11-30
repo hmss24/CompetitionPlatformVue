@@ -1,9 +1,13 @@
 <template>
-<div class="login-bg">
+<div class="login-box">
   <div class="form">
         <n-icon :component="CloseCircleOutline" size="3em" @click="handleCloseClick"/>
-    <div class="header" v-if="status">register</div>
-    <div class="header" v-else>login</div>
+    <div class="header" v-if="status">
+        register
+    </div>
+    <div class="header" v-else>
+        login
+    </div>
     <div class="main">
         <div class="inpbox">
             <input type="text" placeholder="username" v-model="usern" />
@@ -16,8 +20,12 @@
         </div>
     </div>
     <div class="action">
-        <div class="btn" @click="handleLoginClick">Login</div>
-        <div class="btn" @click="handleRegisterClick">Register</div>
+        <div class="btn" @click="handleLoginClick">
+            Login
+        </div>
+        <div class="btn" @click="handleRegisterClick">
+            Register
+        </div>
     </div>
   </div>
 </div>
@@ -98,24 +106,20 @@ const handleLoginClick = async () => {
     padding: 0;
 }
 
-.login-bg {
+.login-box {
   width: 100%;
   height: 100%;
-  z-index: -10;
-  zoom: 1;
   background-attachment: fixed;
+  text-align: center;
+  padding: 1px;
   background-image: url("@/assets/img/6CE1C14B1530CC53A70EC811E4D49709.jpg");
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  overflow: hidden;
-}
-
-.form {
-    width: 30vw;
-    height: 30vh;
-    margin-left: 35%;
-    margin-top: 15%;
+  .form {
+    width: 20%;
+    height: auto;
+    margin: 200px auto;
     background-color: rgb(41, 45, 62);
     color: #fff;
     border-radius: 2px;
@@ -123,14 +127,42 @@ const handleLoginClick = async () => {
     border-radius: 15px;
     box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.4);
     opacity: 0.9;
-}
+    
+    .n-icon {
+        color: #fff;
+        position: relative;
+        cursor: pointer;
+    }
+  }
 
-.form > .n-icon {
-    color: #fff;
+  .main {
     position: relative;
-    left: 100%;
-    top: 0%;
-    cursor: pointer;
+
+    .inpbox {
+        background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
+        background-size: 400%;
+        width: 100%;
+        height: 50px;
+        margin-bottom: 20px;
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 1s;
+    }
+
+    .inpbox input {
+    height: calc(100% - 4px);
+    width: calc(100% - 6px);
+    border-radius: 30px;
+    }
+
+    .inpbox:has(input:focus) {
+    animation: animate 5s linear infinite;
+    transform: scale(1.1);
+    }
+
+  }
 }
 
 .header {
@@ -140,7 +172,10 @@ const handleLoginClick = async () => {
     line-height: 100px;
 }
 
+
+
 .main > .inpbox input {
+    position: relative;
     background-color: rgb(41, 45, 62);
     border: 0;
     width: 40%;
@@ -150,29 +185,6 @@ const handleLoginClick = async () => {
     outline: none;
 }
 
-.main > .inpbox {
-    background: linear-gradient(90deg, #03a9f4, #f441a5, #ffeb3b, #03a9f4);
-    background-size: 400%;
-    width: 100%;
-    height: 50px;
-    margin-bottom: 20px;
-    border-radius: 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 1s;
-}
-
-.main > .inpbox input {
-    height: calc(100% - 4px);
-    width: calc(100% - 6px);
-    border-radius: 30px;
-}
-
-.main > .inpbox:has(input:focus) {
-    animation: animate 5s linear infinite;
-    transform: scale(1.1);
-}
 
 @keyframes animate {
     0% {

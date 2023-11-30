@@ -30,9 +30,9 @@ import router from '@/router';
 import { pushScopeId, ref } from 'vue';
 import type { throwError } from 'naive-ui/es/_utils';
 
-const userp = "";
-const usern = "";
-const ruserp = "";
+const userp = ref("");
+const usern = ref("");
+const ruserp = ref("");
 let status = ref(true);
 const handleRegisterClick = async () => {
     if(!status.value) {
@@ -40,14 +40,14 @@ const handleRegisterClick = async () => {
     }
     else {
         try {
-            if(ruserp != userp) {
+            if(ruserp.value != userp.value) {
                 throw (new APIError({code:-99,msg:"密码不一致"}));
             }
             //const x = await apiUserSignup({nickname:usern,username:usern,password:userp});
             //useMessage().info("注册成功");
             status.value = false;
         } catch (error:any) {
-            //useMessage().error(error.msg);
+            alert(error.msg);
         }
     }
 }

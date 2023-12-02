@@ -1,7 +1,7 @@
 <template>
 <div class="login-box">
   <div class="form">
-        <n-icon :component="CloseCircleOutline" size="3em" @click="handleCloseClick"/>
+        <n-icon :component="CloseCircleOutline" size="3em" @click="handleCloseClick" style="margin-left: 100%;"/>
     <div class="header" v-if="status">
         register
     </div>
@@ -107,19 +107,17 @@ const handleLoginClick = async () => {
 }
 
 .login-box {
-  width: 100%;
-  height: 100%;
-  background-attachment: fixed;
   text-align: center;
-  padding: 1px;
+  padding: 0.1px;
   background-image: url("@/assets/img/6CE1C14B1530CC53A70EC811E4D49709.jpg");
   background-size: cover;
-  background-position: center center;
   background-repeat: no-repeat;
   .form {
     width: 20%;
     height: auto;
-    margin: 200px auto;
+    /*margin: 200px auto;*/
+    margin-left: 35%;
+    margin-top: 5%;
     background-color: rgb(41, 45, 62);
     color: #fff;
     border-radius: 2px;
@@ -208,7 +206,7 @@ const handleLoginClick = async () => {
     margin:10px;
     text-transform: uppercase;
     border: 2px solid #0e92b3;
-    text-align: center;
+    /*text-align: center;*/
     line-height: 50px;
     border-radius: 30px;
     cursor: pointer;
@@ -223,3 +221,5 @@ const handleLoginClick = async () => {
     transform: scale(1.2);
 }
 </style>
+
+<!--Reminder-->

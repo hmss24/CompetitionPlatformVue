@@ -53,6 +53,9 @@ UserModel.init(
       type: DataTypes.DATE,
       allowNull: false,
     },
+    exist : {
+      type: DataTypes.BOOLEAN
+    }
   },
   {
     tableName: "tb_users",

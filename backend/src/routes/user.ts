@@ -10,11 +10,12 @@ import {
   checkShortString,
   checkUserName,
   getBigInt,
+  makeArgumentsError,
   makeInternelError,
 } from "@/utils/utils";
 import dayjs from "dayjs";
-import express from "express";
-import { Op } from "sequelize";
+import express, { response } from "express";
+import { FindAndCountOptions, Op, or } from "sequelize";
 
 const router = express.Router();
 
@@ -23,8 +24,6 @@ router.post("/signup", async (request, response) => {
   const nickname: string = request.body.nickname ?? username;
   const password: string = request.body.password;
   const email: string | null = request.body.email;
-  const description: string | null = request.body.description;
-  const extra: string | null = request.body.extra;
 
   if (!checkUserName(username))
     return response.json({
@@ -46,16 +45,11 @@ router.post("/signup", async (request, response) => {
       code: errorcode.USER_REGISTER_FAILED,
       msg: tips.REGISTER_FAILED_EMAIL_ILLEGAL,
     });
-  if (description != null && !checkLongString(description))
-    return response.json({
-      code: errorcode.USER_REGISTER_FAILED,
-      msg: tips.REGISTER_FAILED_DESCRIPTION_ILLEGAL,
-    });
 
   try {
     if ((await UserModel.findOne({ where: { username: username } })) != null) {
       return response.json({
-        code: errorcode.USER_REGISTER_EXIST,
+        code: errorcode.USER_REGISTER_EXISTING,
         msg: tips.REGISTER_FAILED_USERNAME_EXISTING,
       });
     }
@@ -71,7 +65,6 @@ router.post("/signup", async (request, response) => {
       nickname,
       password: encryptedPassword,
       email,
-      description,
       createdTime: new Date(),
       updatedTime: new Date(),
     });
@@ -117,7 +110,7 @@ router.post("/login", async (request, response) => {
     response.setHeader("username", username.toString());
     response.setHeader(
       "Access-Control-Expose-Headers",
-      `token,username,userid`
+      "token,username,userid"
     );
     tokenAdd(token, svalue.userId);
     return response.json({
@@ -227,51 +220,35 @@ router.get("/query", async (request, response) => {
   }
 });
 
-router.get("/query_id", async (request, response) => {
-  const _userIds = request.body.userId;
-  const userIds = _userIds instanceof Array ? _userIds : [_userIds];
-  if (!userIds.every((x) => checkBigInt(x)))
-    return response.json({
-      code: errorcode.USER_QUERY_ERROR,
-      msg: tips.USER_QUERY_FAILED_BAD_FORMAT,
-    });
-  try {
-    const datas = await UserModel.findAll({ where: { userId: [userIds] } });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.USER_QUERY_SUCCESS,
-      data: datas.map((x) => ({
-        userId: x.userId,
-        username: x.username,
-        nickname: x.nickname,
-        email: x.email,
-        description: x.description,
-        extra: x.extra,
-        createdTime: dayjs(x.createdTime).format(),
-        updatedTime: dayjs(x.updatedTime).format(),
-      })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
+router.get("/list", async (request, response) => {
+  const opt: Omit<FindAndCountOptions<any>, "group"> = {};
+  const { nickname, offset, limit } = request.body;
 
-router.get("/search", async (request, response) => {
-  const nickname: string = request.body.nickname;
-  if (!checkShortString(nickname))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  if (typeof nickname == "string") {
+    if (!checkShortString(nickname)) return response.json(makeArgumentsError());
+    opt.where = { nickname: { [Op.like]: `%${nickname}%` } };
+  } else if (nickname != null) return response.json(makeArgumentsError());
+  
+  if (typeof limit == "number") {
+    if (limit > QUERY_MAX_LIMIT || limit < 0)
+      return response.json(makeArgumentsError());
+    opt.limit = limit;
+  } else if (limit == null) opt.limit = 100;
+  else return response.json(makeArgumentsError());
+
+  if (typeof offset == "number") {
+    if (offset < 0) return response.json(makeArgumentsError());
+    opt.offset = offset;
+  } else if (offset == null) opt.offset = 0;
+  else return response.json(makeArgumentsError());
+
   try {
-    const svalue = await UserModel.findAll({
-      where: { nickname: { [Op.like]: `%${nickname}%` } },
-      limit: QUERY_MAX_LIMIT,
-    });
+    const svalue = await UserModel.findAndCountAll(opt);
     return response.json({
       code: errorcode.SUCCESS,
-      msg: tips.USER_SEARCH_SUCCESS,
-      data: svalue.map((x) => ({
+      msg: tips.USER_LIST_SUCCESS,
+      count: svalue.count,
+      data: svalue.rows.map((x) => ({
         userId: x.userId,
         username: x.username,
         nickname: x.nickname,

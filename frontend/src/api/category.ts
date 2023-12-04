@@ -23,13 +23,9 @@ export async function apiCategoryAdd(conf: { name: string; description?: string 
   const { name, description } = conf
   if (!checkShortString(name)) throw new APIError('名称非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
-  const res = await request.post(
-    '/category/add',
-    { name, description },
-    {
-      headers: generateHeader() ?? {}
-    }
-  )
+  const res = await request.post('/category/add', conf, {
+    headers: generateHeader() ?? {}
+  })
   return res.data.categoryId as string
 }
 
@@ -42,13 +38,9 @@ export async function apiCategoryModify(conf: {
   if (!checkBigInt(categoryId)) throw new APIError('类别ID非法')
   if (name != null && !checkShortString(name)) throw new APIError('名称非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
-  await request.post(
-    '/category/modify',
-    { categoryId, name, description },
-    {
-      headers: generateHeader() ?? {}
-    }
-  )
+  await request.post('/category/modify', conf, {
+    headers: generateHeader() ?? {}
+  })
   return
 }
 
@@ -63,24 +55,25 @@ export async function apiCategoryDelete(categoryId: string | number) {
 
 export async function apiCategoryList(conf: {
   userId?: string | number
-  start?: number
-  lim?: number
+  name?: string
+  createdTime?: Date | string
+  updatedTime?: Date | string
+  offset?: number
+  limit?: number
+  order?: string[]
 }) {
-  const { userId, start, lim } = conf
-  if (userId != null && !checkBigInt(userId)) throw new APIError('用户ID非法')
-  const x = (await request.get('/category/list', { data: { userId, start, lim } })).data.data
-  return (x as any[]).map((x) => ({
-    categoryId: x.categoryId as string,
-    userId: x.userId as string,
-    name: x.name as string,
-    description: x.description as string | null,
-    createdTime: dayjs(x.createdTime).toDate(),
-    updatedTime: dayjs(x.updatedTime).toDate()
-  }))
-}
-
-export async function apiCategoryListCount(userId: string | number | undefined) {
-  if (userId != null && !checkBigInt(userId)) throw new APIError('用户ID非法')
-  const x = (await request.get('/category/list', { data: { userId } })).data
-  return x.count as number
+  if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
+  const data = (await request.get('/category/list', { data: conf })).data
+  return {
+    count: data.count as number,
+    data: (data.data as any[]).map((x) => ({
+      categoryId: x.categoryId as string,
+      userId: x.userId as string,
+      name: x.name as string,
+      nickname: x.nickname as string,
+      description: x.description as string | null,
+      createdTime: dayjs(x.createdTime),
+      updatedTime: dayjs(x.updatedTime)
+    }))
+  }
 }

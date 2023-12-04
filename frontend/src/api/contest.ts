@@ -11,13 +11,8 @@ export async function apiContestAdd(conf: {
   if (!checkBigInt(categoryId)) throw new APIError('类型ID非法')
   if (!checkShortString(title)) throw new APIError('标题非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
-  return (
-    await request.post(
-      '/contest/add',
-      { categoryId, title, description },
-      { headers: generateHeader() ?? {} }
-    )
-  ).data.contestId as string
+  return (await request.post('/contest/add', conf, { headers: generateHeader() ?? {} })).data
+    .contestId as string
 }
 
 export async function apiContestDelete(contestId: number | string) {
@@ -37,16 +32,7 @@ export async function apiContestModify(conf: {
   if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
   if (conf.description != null && !checkLongString(conf.description)) throw new APIError('描述非法')
   if (conf.categoryId == null && conf.title == null && conf.description == null) return
-  await request.post(
-    '/contest/modify',
-    {
-      contestId: conf.contestId,
-      categoryId: conf.categoryId,
-      title: conf.title,
-      description: conf.description
-    },
-    { headers: generateHeader() ?? {} }
-  )
+  await request.post('/contest/modify', conf, { headers: generateHeader() ?? {} })
   return
 }
 
@@ -59,8 +45,8 @@ export async function apiContestQuery(id: number | string) {
     categoryId: x.categoryId as string,
     title: x.title as string,
     description: x.description as string | null,
-    createdTime: dayjs(x.createdTime).toDate(),
-    updatedTime: dayjs(x.updatedTime).toDate()
+    createdTime: dayjs(x.createdTime),
+    updatedTime: dayjs(x.updatedTime)
   }
 }
 
@@ -68,54 +54,30 @@ export async function apiContestList(conf: {
   userId?: string | number
   categoryId?: string | number
   title?: string
-  start?: number
-  lim?: number
+  createdTime?: Date | string
+  updatedTime?: Date | string
+  offset?: number
+  limit?: number
+  order?: string[]
 }) {
   if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
   if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
   if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
-  return (
-    (
-      await request.get('/contest/list', {
-        data: {
-          userId: conf.userId,
-          categoryId: conf.categoryId,
-          title: conf.title,
-          start: conf.start,
-          lim: conf.lim
-        }
-      })
-    ).data.data as any[]
-  ).map((x) => ({
-    contestId: x.contestId as string,
-    userId: x.userId as string,
-    categoryId: x.categoryId as string,
-    title: x.title as string,
-    description: x.description as string | null,
-    createdTime: dayjs(x.createdTime).toDate(),
-    updatedTime: dayjs(x.updatedTime).toDate()
-  }))
-}
+  const data = (await request.get('/contest/list', { data: conf })).data
+  return {
+    count: data.count as number,
+    data: (data.data as any[]).map((x) => ({
+      contestId: x.contestId as string,
+      userId: x.userId as string,
+      categoryId: x.categoryId as string,
 
-export async function apiContestListCount(conf: {
-  userId?: string | number
-  categoryId?: string | number
-  title?: string
-  start?: number
-  lim?: number
-}) {
-  if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
-  if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
-  if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
-  return (
-    await request.get('/contest/list_count', {
-      data: {
-        userId: conf.userId,
-        categoryId: conf.categoryId,
-        title: conf.title,
-        start: conf.start,
-        lim: conf.lim
-      }
-    })
-  ).data.count as number
+      nickname: x.nickname as string,
+      categoryName: x.categoryName as string,
+
+      title: x.title as string,
+      description: x.description as string | null,
+      createdTime: dayjs(x.createdTime),
+      updatedTime: dayjs(x.updatedTime)
+    }))
+  }
 }

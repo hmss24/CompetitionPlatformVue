@@ -62,7 +62,7 @@ router.post("/add", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const contestId = request.body.contestId;
+  const contestId = request.query.contestId;
   if (!checkBigInt(contestId)) return response.json(makeArgumentsError());
 
   try {
@@ -77,7 +77,7 @@ router.delete("/delete", async (request, response) => {
         code: errorcode.NO_PERMISSION,
         msg: tips.NO_PERMISSION,
       });
-    await deleteRecordsByContest(contestId);
+    await deleteRecordsByContest(contestId as any);
     await svalue.destroy();
     return response.json({
       code: errorcode.SUCCESS,
@@ -137,7 +137,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const contestId = request.body.contestId;
+  const contestId = request.query.contestId;
   if (!checkBigInt(contestId))
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
@@ -176,10 +176,10 @@ router.get("/list", async (request, response) => {
     title,
     createdTime,
     updatedTime,
-    offset,
-    limit,
+    _offset,
+    _limit,
     order,
-  } = request.body;
+  } = request.query;
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
 
@@ -204,12 +204,14 @@ router.get("/list", async (request, response) => {
       case 0:
         break; // ignore
       case 1:
-        where.createdTime = { [Op.like]: dayjs(createdTime[0]).toDate() };
+        where.createdTime = {
+          [Op.like]: dayjs(createdTime[0] as any).toDate(),
+        };
         break;
       case 2:
         where.createdTime = {
-          [Op.gte]: dayjs(createdTime[0]).toDate(),
-          [Op.lte]: dayjs(createdTime[1]).toDate(),
+          [Op.gte]: dayjs(createdTime[0] as any).toDate(),
+          [Op.lte]: dayjs(createdTime[1] as any).toDate(),
         };
         break;
     }
@@ -224,28 +226,32 @@ router.get("/list", async (request, response) => {
       case 0:
         break; // ignore
       case 1:
-        where.updatedTime = { [Op.like]: dayjs(updatedTime[0]).toDate() };
+        where.updatedTime = {
+          [Op.like]: dayjs(updatedTime[0] as any).toDate(),
+        };
         break;
       case 2:
         where.updatedTime = {
-          [Op.gte]: dayjs(updatedTime[0]).toDate(),
-          [Op.lte]: dayjs(updatedTime[1]).toDate(),
+          [Op.gte]: dayjs(updatedTime[0] as any).toDate(),
+          [Op.lte]: dayjs(updatedTime[1] as any).toDate(),
         };
         break;
     }
   } else return response.json(makeArgumentsError());
 
-  if (typeof limit == "number") {
-    if (limit > QUERY_MAX_LIMIT || limit < 0)
+  if (typeof _limit == "number" || typeof _limit == "string") {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
       return response.json(makeArgumentsError());
     opt.limit = limit;
-  } else if (limit == null) opt.limit = 100;
+  } else if (_limit == null) opt.limit = 100;
   else return response.json(makeArgumentsError());
 
-  if (typeof offset == "number") {
-    if (offset < 0) return response.json(makeArgumentsError());
+  if (typeof _offset == "number" || typeof _offset == "string") {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
     opt.offset = offset;
-  } else if (offset == null) opt.offset = 0;
+  } else if (_offset == null) opt.offset = 0;
   else return response.json(makeArgumentsError());
 
   opt.include = [

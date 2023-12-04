@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "axios": "^1.6.2",
+    "day-night-toggle-button": "link:~/code/uk/Day-night-toggle-button/白天黑夜切换按钮npm包/",
     "dayjs": "^1.11.10",
     "pinia": "^2.1.7",
     "vue": "^3.3.4",

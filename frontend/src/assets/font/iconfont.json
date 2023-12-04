@@ -1,0 +1,51 @@
+{
+  "id": "4041224",
+  "name": "kapilog",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "6758389",
+      "name": "星星",
+      "font_class": "xingxing",
+      "unicode": "e619",
+      "unicode_decimal": 58905
+    },
+    {
+      "icon_id": "9445202",
+      "name": "星星",
+      "font_class": "xingxing1",
+      "unicode": "e694",
+      "unicode_decimal": 59028
+    },
+    {
+      "icon_id": "13030669",
+      "name": "星星",
+      "font_class": "xingxing2",
+      "unicode": "e63b",
+      "unicode_decimal": 58939
+    },
+    {
+      "icon_id": "34055510",
+      "name": "星星",
+      "font_class": "xingxing3",
+      "unicode": "e601",
+      "unicode_decimal": 58881
+    },
+    {
+      "icon_id": "1276869",
+      "name": "博客_blogger3",
+      "font_class": "bokeblogger3",
+      "unicode": "e722",
+      "unicode_decimal": 59170
+    },
+    {
+      "icon_id": "7851935",
+      "name": "bug",
+      "font_class": "bug",
+      "unicode": "e613",
+      "unicode_decimal": 58899
+    }
+  ]
+}

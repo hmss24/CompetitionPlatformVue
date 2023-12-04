@@ -179,11 +179,11 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const username: string = request.body.username;
+  const username = request.query.username as string;
   const userId =
-    getBigInt(request.body.userId) ??
-    (request.body.userId ? request.headers["userid"].toString() : null);
-  if (userId == null && request.body.userId != null)
+    getBigInt(request.query.userId) ??
+    (request.query.userId ? request.headers["userid"].toString() : null);
+  if (userId == null && request.query.userId != null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
@@ -222,24 +222,26 @@ router.get("/query", async (request, response) => {
 
 router.get("/list", async (request, response) => {
   const opt: Omit<FindAndCountOptions<any>, "group"> = {};
-  const { nickname, offset, limit } = request.body;
+  const { nickname, _offset, _limit } = request.query;
 
   if (typeof nickname == "string") {
     if (!checkShortString(nickname)) return response.json(makeArgumentsError());
     opt.where = { nickname: { [Op.like]: `%${nickname}%` } };
   } else if (nickname != null) return response.json(makeArgumentsError());
   
-  if (typeof limit == "number") {
-    if (limit > QUERY_MAX_LIMIT || limit < 0)
+  if (typeof _limit == "number" || typeof _limit == 'string') {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
       return response.json(makeArgumentsError());
     opt.limit = limit;
-  } else if (limit == null) opt.limit = 100;
+  } else if (_limit == null) opt.limit = 100;
   else return response.json(makeArgumentsError());
 
-  if (typeof offset == "number") {
-    if (offset < 0) return response.json(makeArgumentsError());
+  if (typeof _offset == "number" || typeof _offset == 'string') {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
     opt.offset = offset;
-  } else if (offset == null) opt.offset = 0;
+  } else if (_offset == null) opt.offset = 0;
   else return response.json(makeArgumentsError());
 
   try {

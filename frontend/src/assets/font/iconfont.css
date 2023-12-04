@@ -1,0 +1,39 @@
+@font-face {
+  font-family: "iconfont"; /* Project id 4041224 */
+  src: url('iconfont.woff2?t=1685157283657') format('woff2'),
+       url('iconfont.woff?t=1685157283657') format('woff'),
+       url('iconfont.ttf?t=1685157283657') format('truetype');
+}
+
+.iconfont {
+  font-family: "iconfont" !important;
+  font-size: 16px;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icon-xingxing:before {
+  content: "\e619";
+}
+
+.icon-xingxing1:before {
+  content: "\e694";
+}
+
+.icon-xingxing2:before {
+  content: "\e63b";
+}
+
+.icon-xingxing3:before {
+  content: "\e601";
+}
+
+.icon-bokeblogger3:before {
+  content: "\e722";
+}
+
+.icon-bug:before {
+  content: "\e613";
+}
+

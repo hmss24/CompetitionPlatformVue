@@ -17,7 +17,7 @@ export async function apiContestAdd(conf: {
 
 export async function apiContestDelete(contestId: number | string) {
   if (!checkBigInt(contestId)) throw new APIError('比赛ID非法')
-  await request.delete('/contest/delete', { data: { contestId }, headers: generateHeader() ?? {} })
+  await request.delete('/contest/delete', { params: { contestId }, headers: generateHeader() ?? {} })
   return
 }
 
@@ -38,7 +38,7 @@ export async function apiContestModify(conf: {
 
 export async function apiContestQuery(id: number | string) {
   if (!checkBigInt(id)) throw new APIError('比赛ID非法')
-  const x = (await request.get('/contest/query', {})).data
+  const x = (await request.get('/contest/query', { params: { contestId: id } })).data
   return {
     contestId: x.contestId as string,
     userId: x.userId as string,
@@ -58,12 +58,12 @@ export async function apiContestList(conf: {
   updatedTime?: Date | string
   offset?: number
   limit?: number
-  order?: string[]
+  order?: string[] | string
 }) {
   if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
   if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
   if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
-  const data = (await request.get('/contest/list', { data: conf })).data
+  const data = (await request.get('/contest/list', { params: conf })).data
   return {
     count: data.count as number,
     data: (data.data as any[]).map((x) => ({

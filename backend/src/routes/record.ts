@@ -70,8 +70,7 @@ router.post("/add", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const _recordIds: string | number | (string | number)[] =
-    request.body.recordId;
+  const _recordIds: any = request.query.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
   if (!recordIds.every((x) => checkBigInt(recordIds)))
     return response.json({
@@ -105,7 +104,7 @@ router.delete("/delete", async (request, response) => {
 });
 
 router.delete("/delete_by_contest", async (request, response) => {
-  const contestId = getBigInt(request.body.contestId);
+  const contestId = getBigInt(request.query.contestId);
   if (contestId == null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
@@ -178,8 +177,8 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const _recordIds: string | number | (string | number)[] =
-    request.body.recordId;
+  const _recordIds: any =
+    request.query.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
   if (!recordIds.every((x) => checkBigInt(recordIds)))
     return response.json({
@@ -207,7 +206,7 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const { contestId, playerId, limit, offset, order } = request.body;
+  const { contestId, playerId, _limit, _offset, order } = request.query;
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
 
@@ -216,20 +215,28 @@ router.get("/list", async (request, response) => {
   if (where.contestId == null && where.playerId == null)
     return response.json(makeArgumentsError());
 
-  if (typeof limit == "number") {
-    if (limit > QUERY_MAX_LIMIT || limit < 0)
+  if (typeof _limit == "number" || typeof _limit == "string") {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
       return response.json(makeArgumentsError());
     opt.limit = limit;
-  } else if (limit == null) opt.limit = 100;
+  } else if (_limit == null) opt.limit = 100;
   else return response.json(makeArgumentsError());
 
-  if (typeof offset == "number") {
-    if (offset < 0) return response.json(makeArgumentsError());
+  if (typeof _offset == "number" || typeof _offset == "string") {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
     opt.offset = offset;
-  } else if (offset == null) opt.offset = 0;
+  } else if (_offset == null) opt.offset = 0;
   else return response.json(makeArgumentsError());
 
-  opt.include = [{ model: UserModel, as: "userTable" }];
+  opt.include = [
+    {
+      model: UserModel,
+      as: "userTable",
+      attributes: ["userId", "nickname"],
+    },
+  ];
   opt.order = getOrder(order)?.map((x) => {
     switch (x[0]) {
       case "playerNickname":
@@ -240,7 +247,7 @@ router.get("/list", async (request, response) => {
   });
 
   try {
-    const svalue = await RecordModel.findAndCountAll({ where: { contestId } });
+    const svalue = await RecordModel.findAndCountAll(opt);
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.RECORD_LIST_SUCCESS,

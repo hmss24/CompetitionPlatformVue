@@ -6,7 +6,7 @@ export async function apiCategoryQuery(categoryId: number | string) {
   if (!checkBigInt(categoryId)) throw new APIError('类别ID非法')
   const x = (
     await request.get('/category/query', {
-      data: { categoryId }
+      params: { categoryId }
     })
   ).data
   return {
@@ -47,7 +47,7 @@ export async function apiCategoryModify(conf: {
 export async function apiCategoryDelete(categoryId: string | number) {
   if (!checkBigInt(categoryId)) throw new APIError('类别ID非法')
   await request.delete('/category/delete', {
-    data: { categoryId },
+    params: { categoryId },
     headers: generateHeader() ?? {}
   })
   return
@@ -60,10 +60,10 @@ export async function apiCategoryList(conf: {
   updatedTime?: Date | string
   offset?: number
   limit?: number
-  order?: string[]
+  order?: string[] | string
 }) {
   if (conf.userId != null && !checkBigInt(conf.userId)) throw new APIError('用户ID非法')
-  const data = (await request.get('/category/list', { data: conf })).data
+  const data = (await request.get('/category/list', { params: conf })).data
   return {
     count: data.count as number,
     data: (data.data as any[]).map((x) => ({

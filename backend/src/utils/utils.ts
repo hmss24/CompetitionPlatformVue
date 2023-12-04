@@ -52,11 +52,11 @@ export function checkEmail(email: string) {
   );
 }
 
-export function checkShortString(s: string) {
+export function checkShortString(s: any) {
   if (typeof s != "string") return false;
   return !(s.length < 1 || s.length > 50);
 }
-export function checkLongString(s: string) {
+export function checkLongString(s: any) {
   if (typeof s != "string") return false;
   return s.length < 10000;
 }
@@ -81,6 +81,7 @@ export function makeArgumentsError() {
  * @returns 列表，或者null表示转化失败
  */
 export function getOrder(order: any) {
+  if (typeof order == "string") order = [order];
   if (order instanceof Array) {
     if (!order.every((x) => typeof x == "string")) return null;
     const set = new Set<string>();

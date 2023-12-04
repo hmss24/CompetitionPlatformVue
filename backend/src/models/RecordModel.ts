@@ -39,5 +39,9 @@ RecordModel.init(
 );
 
 RecordModel.sync();
-RecordModel.belongsTo(UserModel, { as: "userTable", foreignKey: "userId" });
+RecordModel.belongsTo(UserModel, {
+  as: "userTable",
+  foreignKey: "playerId",
+  targetKey: "userId",
+});
 export default RecordModel;

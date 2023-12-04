@@ -19,23 +19,14 @@ import { FindAndCountOptions, Op, ValidationError, or } from "sequelize";
 const router = express.Router();
 
 router.get("/query", async (request, response) => {
-  const categoryId: string | number = request.body.categoryId;
-  const name: string = request.body.name;
+  const categoryId = request.query.categoryId;
+  const name = request.query.name;
   if (!checkBigInt(categoryId) && request.body.categoryId != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (!checkShortString(name) && request.body.name != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (categoryId == null && name == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
 
   try {
     const svalue = await CategoryModel.findOne({
@@ -46,12 +37,21 @@ router.get("/query", async (request, response) => {
         code: errorcode.NONEXISTING,
         msg: tips.NONEXISTING,
       });
+    const nickname = (
+      await UserModel.findOne({ where: { userId: svalue.userId } })
+    )?.nickname;
+    if (nickname == null)
+      return response.json({
+        code: errorcode.DONT_MEETING_EXCEPTION,
+        msg: tips.DONT_MEETING_EXCEPTION,
+      });
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CATEGORY_QUERY_SUCCESS,
       data: {
         categoryId: svalue.categoryId,
         userId: svalue.userId,
+        nickname,
         name: svalue.name,
         description: svalue.description,
         createdTime: svalue.createdTime,
@@ -164,7 +164,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const categoryId = getBigInt(request.body.categoryId);
+  const categoryId = getBigInt(request.query.categoryId);
   if (categoryId == null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
@@ -207,8 +207,8 @@ router.delete("/delete", async (request, response) => {
 router.get("/list", async (request, response) => {
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
-  const { userId, name, createdTime, updatedTime, offset, limit, order } =
-    request.body;
+  const { userId, name, createdTime, updatedTime, _offset, _limit, order } =
+    request.query;
 
   if (userId == null) {
   } else if (checkBigInt(userId)) where.userId = userId;
@@ -227,12 +227,14 @@ router.get("/list", async (request, response) => {
       case 0:
         break; // ignore
       case 1:
-        where.createdTime = { [Op.like]: dayjs(createdTime[0]).toDate() };
+        where.createdTime = {
+          [Op.like]: dayjs(createdTime[0] as string).toDate(),
+        };
         break;
       case 2:
         where.createdTime = {
-          [Op.gte]: dayjs(createdTime[0]).toDate(),
-          [Op.lte]: dayjs(createdTime[1]).toDate(),
+          [Op.gte]: dayjs(createdTime[0] as string).toDate(),
+          [Op.lte]: dayjs(createdTime[1] as string).toDate(),
         };
         break;
     }
@@ -247,28 +249,32 @@ router.get("/list", async (request, response) => {
       case 0:
         break; // ignore
       case 1:
-        where.updatedTime = { [Op.like]: dayjs(updatedTime[0]).toDate() };
+        where.updatedTime = {
+          [Op.like]: dayjs(updatedTime[0] as string).toDate(),
+        };
         break;
       case 2:
         where.updatedTime = {
-          [Op.gte]: dayjs(updatedTime[0]).toDate(),
-          [Op.lte]: dayjs(updatedTime[1]).toDate(),
+          [Op.gte]: dayjs(updatedTime[0] as string).toDate(),
+          [Op.lte]: dayjs(updatedTime[1] as string).toDate(),
         };
         break;
     }
   } else return response.json(makeArgumentsError());
 
-  if (typeof limit == "number") {
-    if (limit > QUERY_MAX_LIMIT || limit < 0)
+  if (typeof _limit == "number" || typeof _limit == "string") {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
       return response.json(makeArgumentsError());
     opt.limit = limit;
-  } else if (limit == null) opt.limit = 100;
+  } else if (_limit == null) opt.limit = 100;
   else return response.json(makeArgumentsError());
 
-  if (typeof offset == "number") {
-    if (offset < 0) return response.json(makeArgumentsError());
+  if (typeof _offset == "number" || typeof _offset == "string") {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
     opt.offset = offset;
-  } else if (offset == null) opt.offset = 0;
+  } else if (_offset == null) opt.offset = 0;
   else return response.json(makeArgumentsError());
 
   opt.include = [{ model: UserModel, as: "userTable" }];

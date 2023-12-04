@@ -21,6 +21,7 @@ export const errorcode = {
   BAD_ARGUMENTS: -3, // 参数错误
   NO_PERMISSION: -4, // 没有权限
   NONEXISTING: -5, // 目标不存在
+  DONT_MEETING_EXCEPTION: -6, // 不符合预期
 
   FRONTEND_ERROR: -99, // 前端错误（预留给前端，后端不会发出该错误）
 
@@ -60,6 +61,7 @@ export const tips = {
   BAD_ARGUMENTS: "参数错误",
   NO_PERMISSION: "操作无权限",
   NONEXISTING: "操作目标不存在",
+  DONT_MEETING_EXCEPTION: "系统内部不自洽",
 
   TOKEN_UNDEFINED: "您无权限操作此区域",
   TOKEN_OUTDATE: "登录信息已过期，请重新登录",

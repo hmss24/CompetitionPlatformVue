@@ -1,5 +1,7 @@
 import { sequelize } from "@/utils/sql";
 import { DataTypes, Model } from "sequelize";
+import UserModel from "./UserModel";
+import ContestModel from "./ContestModel";
 
 class RecordModel extends Model {
   declare recordId: string; // 记录ID（自增）
@@ -37,4 +39,5 @@ RecordModel.init(
 );
 
 RecordModel.sync();
+RecordModel.belongsTo(UserModel, { as: "userTable", foreignKey: "userId" });
 export default RecordModel;

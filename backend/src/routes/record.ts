@@ -1,13 +1,17 @@
 import ContestModel from "@/models/ContestModel";
 import RecordModel from "@/models/RecordModel";
+import UserModel from "@/models/UserModel";
 import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import {
   checkBigInt,
   checkPermission,
   getBigInt,
+  getOrder,
+  makeArgumentsError,
   makeInternelError,
 } from "@/utils/utils";
 import express from "express";
+import { FindAndCountOptions } from "sequelize";
 
 const router = express.Router();
 
@@ -203,97 +207,51 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const contestId = getBigInt(request.body.contestId);
-  if (contestId == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  const { contestId, playerId, limit, offset, order } = request.body;
+  const where: any = {};
+  const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
+
+  if (contestId != null && checkBigInt(contestId)) where.contestId = contestId;
+  if (playerId != null && checkBigInt(playerId)) where.playerId = playerId;
+  if (where.contestId == null && where.playerId == null)
+    return response.json(makeArgumentsError());
+
+  if (typeof limit == "number") {
+    if (limit > QUERY_MAX_LIMIT || limit < 0)
+      return response.json(makeArgumentsError());
+    opt.limit = limit;
+  } else if (limit == null) opt.limit = 100;
+  else return response.json(makeArgumentsError());
+
+  if (typeof offset == "number") {
+    if (offset < 0) return response.json(makeArgumentsError());
+    opt.offset = offset;
+  } else if (offset == null) opt.offset = 0;
+  else return response.json(makeArgumentsError());
+
+  opt.include = [{ model: UserModel, as: "userTable" }];
+  opt.order = getOrder(order)?.map((x) => {
+    switch (x[0]) {
+      case "playerNickname":
+        return ["userTable", "nickname", x[1]];
+      default:
+        return x;
+    }
+  });
 
   try {
-    const svalues = await RecordModel.findAll({ where: { contestId } });
+    const svalue = await RecordModel.findAndCountAll({ where: { contestId } });
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.RECORD_LIST_SUCCESS,
-      data: svalues.map((x) => ({
+      count: svalue.count,
+      data: svalue.rows.map((x) => ({
         recordId: x.recordId,
         contestId: x.contestId,
         playerId: x.playerId,
         score: x.score,
+        playerNickname: ((x as any).userTable as UserModel).nickname,
       })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
-
-router.get("/list_user", async (request, response) => {
-  const playerId = getBigInt(request.body.playerId);
-  if (playerId == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-
-  let start: number, lim: number;
-  try {
-    if (request.body.start) {
-      start = parseInt(request.body.start);
-      if (!Number.isInteger(start)) throw TypeError("integer desired");
-    } else start = 0;
-    if (request.body.lim) {
-      lim = parseInt(request.body.lim);
-      if (!Number.isInteger(lim)) throw TypeError("integer desired");
-    } else lim = QUERY_MAX_LIMIT;
-  } catch (e) {
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  }
-  if (lim > QUERY_MAX_LIMIT)
-    return response.json({
-      code: errorcode.CATEGORY_LIST_ERROR,
-      msg: tips.CATEGORY_LIST_FAILED_TOO_MANY,
-    });
-
-  try {
-    const svalues = await RecordModel.findAll({
-      where: { playerId },
-      offset: start,
-      limit: lim,
-    });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.RECORD_LIST_SUCCESS,
-      data: svalues.map((x) => ({
-        recordId: x.recordId,
-        contestId: x.contestId,
-        playerId: x.playerId,
-        score: x.score,
-      })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
-
-router.get("/list_user_count", async (request, response) => {
-  const playerId = getBigInt(request.body.playerId);
-  if (playerId == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-
-  try {
-    const count = await RecordModel.count({
-      where: { playerId },
-    });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.RECORD_LIST_SUCCESS,
-      count,
     });
   } catch (e) {
     return response.json(makeInternelError(e));

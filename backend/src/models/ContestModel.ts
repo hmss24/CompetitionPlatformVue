@@ -1,5 +1,7 @@
 import { sequelize } from "@/utils/sql";
 import { DataTypes, Model } from "sequelize";
+import UserModel from "./UserModel";
+import CategoryModel from "./CategoryModel";
 
 class ContestModel extends Model {
   declare contestId: string; // 比赛ID（自增）
@@ -52,4 +54,9 @@ ContestModel.init(
 );
 
 ContestModel.sync();
+ContestModel.belongsTo(UserModel, { as: "userTable", foreignKey: "userId" });
+ContestModel.belongsTo(CategoryModel, {
+  as: "categoryTable",
+  foreignKey: "categoryId",
+});
 export default ContestModel;

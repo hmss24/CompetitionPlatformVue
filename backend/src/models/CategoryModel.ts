@@ -1,5 +1,6 @@
 import { sequelize } from "@/utils/sql";
 import { DataTypes, Model } from "sequelize";
+import UserModel from "./UserModel";
 
 class CategoryModel extends Model {
   declare categoryId: string; // 比赛ID（自增）
@@ -47,4 +48,5 @@ CategoryModel.init(
 );
 
 CategoryModel.sync();
+CategoryModel.belongsTo(UserModel, { as: "userTable", foreignKey: "userId" });
 export default CategoryModel;

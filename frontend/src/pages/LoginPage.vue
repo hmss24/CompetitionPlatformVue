@@ -105,16 +105,20 @@ const handleLoginClick = async () => {
   height: 100%;
   background-attachment: fixed;
   text-align: center;
-  padding: 1px;
-  background-image: url('@/assets/img/6CE1C14B1530CC53A70EC811E4D49709.jpg');
+  background-image: url('@/assets/img/500549039.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   .form {
-    width: 20%;
-    height: auto;
-    margin: 200px auto;
-    background-color: rgb(41, 45, 62);
+    /*弹性布局 让子元素称为弹性项目*/
+    display: flex;
+    /*让弹性项目垂直排列  原理是改变弹性盒子的主轴方向  
+      父元素就是弹性盒子  现在改变后的主轴方向是向下了*/
+    flex-direction: column;
+    /*让弹性项目在交叉轴方向水平居中  现在主轴的方向是向下  
+    交叉轴的方向是与主轴垂直 交叉轴的方向是向右*/
+    width: 450px;
+    background-color: rgb(74, 75, 76);
     color: #fff;
     border-radius: 2px;
     padding: 40px;
@@ -170,7 +174,7 @@ const handleLoginClick = async () => {
 
 .main > .inpbox input {
   position: relative;
-  background-color: rgb(41, 45, 62);
+  background-color: rgb(74, 75, 76);
   border: 0;
   width: 40%;
   text-align: center;

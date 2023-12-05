@@ -27,11 +27,16 @@ const ROUTERS: RouteRecordRaw[] = [
     name: 'contestEdit',
     component: () => import('@/pages/contest/edit.vue')
   },
-  // {
-  //   path: '/contest/view/:id(\\d+)',
-  //   name: 'contestView',
-  //   component: () => import('@/pages/contest/view.vue')
-  // }
+  {
+    path: '/contest/view/:id(\\d+)',
+    name: 'contestView',
+    component: () => import('@/pages/contest/view.vue')
+  },
+  {
+    path: '/contest/add',
+    name: 'contestAdd',
+    component: () => import('@/pages/contest/add.vue')
+  }
   // {
   //   path:'/register',
   //   name:'register',

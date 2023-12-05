@@ -43,10 +43,15 @@ pnpm dev
    需要配置如下（也可以修改./backend/src/utils/sql.ts）：
 
    - 创建用户"competiton_root"，密码设为"competiton_root"
-
    - 创建数据库"competition_platform"
-
    - 主机端口为5432（这是默认值，一般不用修改）
+
+   命令行可参考如下指令：
+
+   ```
+   CREATE USER competition_root WITH PASSWORD 'competition_root' CREATEDB;
+   CREATE DATABASE competition_platform OWNER competiton_root;
+   ```
 
 2. 安装Redis
 

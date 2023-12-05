@@ -47,25 +47,73 @@
           />
         </div>
       </div>
-
       <NText style="margin-top: 16px">描述（支持Markdown格式）：</NText>
       <div id="vditor" style="margin-bottom: 16px"></div>
-      <NText style="margin-top: 16px">比赛数据：</NText>
-      <ContestDataTableVue :contest-id="contestId" editable/>
+      <NSpace justify="space-between" align="center" style="margin-bottom: 16px">
+        <NText style="margin-top: 16px">比赛数据：</NText>
+        <NDropdown :options="[{ label: '从文件导入', key: 'importFromFile' }]">
+          <NButton :onclick="handleAddRecord">添加比赛</NButton>
+        </NDropdown>
+      </NSpace>
+      <ContestDataTableVue :contest-id="contestId" editable ref="tableRef" />
     </NSpin>
+
+    <NModal v-model:show="shouldShowModal" :auto-focus="false" :mask-closable="false">
+      <NCard
+        title="添加记录"
+        style="max-width: 500px; max-height: 80%"
+        :bordered="false"
+        preset="card"
+        role="dialog"
+      >
+        <NForm
+          label-placement="left"
+          :label-width="80"
+          :rules="addRecordColumns"
+          v-model:model="modelForm"
+        >
+          <NFormItem label="选手" path="playerId">
+            <UserInput v-model:user-id="modelForm.playerId" />
+          </NFormItem>
+          <NFormItem label="分数" path="score">
+            <NInput :allow-input="(x) => !x || !isNaN(+x)" v-model:value="modelForm.score" />
+          </NFormItem>
+        </NForm>
+        <NSpace justify="end">
+          <NButton round type="primary" @click="handleModelSubmit">确认</NButton>
+          <NButton round @click="handleModelCancel">取消</NButton>
+        </NSpace>
+      </NCard>
+    </NModal>
   </NavBar>
 </template>
 
 <script setup lang="ts">
 import { apiContestDelete, apiContestModify, apiContestQuery } from '@/api/contest'
-import { getAPIErrorInfo } from '@/api/request'
+import { apiRecordAdd } from '@/api/record'
+import { APIError, getAPIErrorInfo } from '@/api/request'
 import CategoryInput from '@/components/CategoryInput.vue'
 import ContestDataTableVue from '@/components/ContestDataTable.vue'
 import NavBar from '@/components/NavBar.vue'
-import { NButton, NInput, NSpace, NSpin, NText, useDialog, useMessage } from 'naive-ui'
+import UserInput from '@/components/UserInput.vue'
+import {
+  NButton,
+  NDropdown,
+  NInput,
+  NSpace,
+  NSpin,
+  NText,
+  useDialog,
+  useMessage,
+  NModal,
+  NCard,
+  NForm,
+  NFormItem,
+  type FormRules
+} from 'naive-ui'
 import Vditor from 'vditor'
 import 'vditor/dist/index.css'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, type VNodeRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const vditor = ref<Vditor>(null as any)
@@ -133,6 +181,38 @@ const handleSaveCategory = async () => {
     }
     categoryDisabled.value = false
   }
+}
+
+const tableRef = ref<VNodeRef | null>(null)
+const shouldShowModal = ref(false)
+const addRecordColumns: FormRules = {
+  playerId: { required: true, message: '请选择用户', trigger: 'blur' },
+  score: { required: true }
+}
+const modelForm = ref({ playerId: '', score: '' })
+const handleAddRecord = () => {
+  console.log(tableRef.value)
+  shouldShowModal.value = true
+}
+const handleModelSubmit = async () => {
+  try {
+    if (!modelForm.value.playerId) throw new APIError('请选择合法的参赛者ID')
+    if (modelForm.value.score == '' || isNaN(+modelForm.value.score)) throw new APIError('请输入合法的分数')
+    await apiRecordAdd({
+      contestId,
+      data: { playerId: modelForm.value.playerId, score: +modelForm.value.score }
+    })
+    $message.success('添加记录成功')
+    tableRef.value?.refresh()
+    shouldShowModal.value = false
+  } catch (e) {
+    $message.error(getAPIErrorInfo(e))
+  }
+}
+
+const handleModelCancel = () => {
+  shouldShowModal.value = false
+  modelForm.value = { playerId: '', score: '' }
 }
 
 onMounted(async () => {

@@ -1,7 +1,6 @@
 <template>
   <NDataTable
     remote
-    ref="table"
     :columns="columns"
     :data="data"
     :loading="loadingState"
@@ -18,11 +17,11 @@ import { APIError, getAPIErrorInfo } from '@/api/request'
 import { checkBigInt } from '@/api/utils'
 import UserInput from '@/components/UserInput.vue'
 import {
-NDataTable,
-NInput,
-useMessage,
-type DataTableSortState,
-type PaginationProps
+  NDataTable,
+  NInput,
+  useMessage,
+  type DataTableSortState,
+  type PaginationProps
 } from 'naive-ui'
 import { type SortOrder, type TableColumn } from 'naive-ui/es/data-table/src/interface'
 import { defineComponent, nextTick, onMounted, reactive, ref, type VNodeRef } from 'vue'
@@ -67,6 +66,10 @@ const doRefresh = async (page?: number, pageSize?: number, newColumns?: any) => 
     $message.error(getAPIErrorInfo(e))
   }
 }
+
+defineExpose({
+  refresh: () => doRefresh()
+})
 
 const loadingState = ref(true)
 onMounted(() => doRefresh())

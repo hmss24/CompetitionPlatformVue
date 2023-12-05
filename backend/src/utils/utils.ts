@@ -52,11 +52,11 @@ export function checkEmail(email: string) {
   );
 }
 
-export function checkShortString(s: string) {
+export function checkShortString(s: any) {
   if (typeof s != "string") return false;
   return !(s.length < 1 || s.length > 50);
 }
-export function checkLongString(s: string) {
+export function checkLongString(s: any) {
   if (typeof s != "string") return false;
   return s.length < 10000;
 }
@@ -65,10 +65,39 @@ export function checkPermission(user: any, author: string) {
   return user == author;
 }
 
-export function makeInternelError(e: Error) {
+export function makeInternelError(e: any) {
   console.log(e);
   return {
     code: errorcode.INTERNEL_ERROR,
     msg: tips.INTERNEL_ERROR,
   };
+}
+export function makeArgumentsError() {
+  return { code: errorcode.BAD_ARGUMENTS, msg: tips.BAD_ARGUMENTS };
+}
+
+/**
+ * 从request中获取排序要求
+ * @returns 列表，或者null表示转化失败
+ */
+export function getOrder(order: any) {
+  if (typeof order == "string") order = [order];
+  if (order instanceof Array) {
+    if (!order.every((x) => typeof x == "string")) return null;
+    const set = new Set<string>();
+    const ret: [string, string][] = [];
+    for (let x of order as string[]) {
+      if (x.length == 0) return null;
+      if (x[0] == "-") {
+        const key = x.substring(1);
+        if (set.has(key)) return null;
+        ret.push([key, "DESC"]);
+      } else {
+        const key = x[0] == "+" ? x.substring(1) : x;
+        if (set.has(key)) return null;
+        ret.push([key, "ASC"]);
+      }
+    }
+    return ret;
+  } else return [];
 }

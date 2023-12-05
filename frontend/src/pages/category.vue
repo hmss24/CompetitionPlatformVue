@@ -101,13 +101,10 @@ const paginationProp = reactive<PaginationProps>({
   }
 })
 
-const shouldShowModal = ref(false)
-const modelForm = ref({ name: '', description: '' })
-const modelTitle = ref('新增分类')
-const handleRefreshClick = async () => {
+const refreshData = async (keepOld?: boolean) => {
   try {
-    tableData.value = [];
-    rawtableData = await apiCategoryList({})
+    if (!keepOld) tableData.value = []
+    rawtableData = (await apiCategoryList({})).data
     tableData.value = rawtableData.filter((x) => x.name.includes(searchText.value))
   } catch (e) {
     if (e instanceof APIError) $message.error(e.msg)
@@ -117,6 +114,12 @@ const handleRefreshClick = async () => {
     }
   }
 }
+
+const shouldShowModal = ref(false)
+const modelForm = ref({ name: '', description: '' })
+const modelTitle = ref('新增分类')
+
+const handleRefreshClick = () => refreshData()
 
 type modelType = { categoryId: string; name: string; description: string }
 let modelSource: modelType | null = null
@@ -148,7 +151,7 @@ const handleModelSubmit = async () => {
     }
     shouldShowModal.value = false
     modelSource = null
-    handleRefreshClick()
+    refreshData(true)
   } catch (e) {
     $message.error(getAPIErrorInfo(e))
   }
@@ -174,7 +177,7 @@ const deleteCategory = async (entry: modelType) => {
   try {
     await apiCategoryDelete(entry.categoryId)
     $message.success('删除类别成功')
-    handleRefreshClick()
+    refreshData(true)
   } catch (e) {
     $message.error(getAPIErrorInfo(e))
   }
@@ -223,19 +226,7 @@ const tableColumns: DataTableColumns = [
 
 const searchText = ref<string>('')
 const tableData = ref<typeof rawtableData>([])
-apiCategoryList({})
-  .then((x) => {
-    rawtableData = x
-    tableData.value = rawtableData.filter((x) => x.name.includes(searchText.value))
-    $message.success('获取数据成功')
-  })
-  .catch((e) => {
-    if (e instanceof APIError) $message.error(e.msg)
-    else {
-      console.log(e)
-      $message.error('未知错误')
-    }
-  })
+refreshData()
 const handleSearchKeyup = async (x: KeyboardEvent) => {
   if (x.key == 'Enter') {
     tableData.value = rawtableData.filter((x) => x.name.includes(searchText.value))
@@ -253,5 +244,5 @@ import {
 import { reactive, ref } from 'vue'
 import { APIError, getAPIErrorInfo } from '@/api/request'
 
-let rawtableData: Awaited<ReturnType<typeof apiCategoryList>> = []
+let rawtableData: Awaited<ReturnType<typeof apiCategoryList>>['data'] = []
 </script>

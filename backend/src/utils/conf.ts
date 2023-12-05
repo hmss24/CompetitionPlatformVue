@@ -21,6 +21,7 @@ export const errorcode = {
   BAD_ARGUMENTS: -3, // 参数错误
   NO_PERMISSION: -4, // 没有权限
   NONEXISTING: -5, // 目标不存在
+  DONT_MEETING_EXCEPTION: -6, // 不符合预期
 
   FRONTEND_ERROR: -99, // 前端错误（预留给前端，后端不会发出该错误）
 
@@ -28,17 +29,16 @@ export const errorcode = {
   TOKEN_OUTDATED: -102, // Token过期
   TOKEN_OUTDATE: -103, // Token过期
 
-  USER_REGISTER_EXIST: -151, // 注册时用户已经存在
+  USER_REGISTER_EXISTING: -151, // 注册时用户已经存在
   USER_REGISTER_FAILED: -152, // 注册失败
   USER_LOGIN_ERROR: -153, // 登录失败
   USER_PASSWD_ERROR: -154, // 登录密码失败
   USER_MODIFY_ERROR: -155, // 修改用户信息失败
   USER_QUERY_ERROR: -156, // 查询用户信息失败
-  USER_SEARCH_ERROR: -157, // 搜索用户信息失败
+  USER_LIST_ERROR: -157, // 列出用户信息失败
 
   CATEGORY_ADD_ERROR: -201, // 添加类别失败
   CATEGORY_MODIFY_ERROR: -202, // 修改类别失败
-  CATEGORY_QUERY_ERROR: -203, // 查询类别失败
   CATEGORY_LIST_ERROR: -204, // 列出类别失败
   CATEGORY_DELETE_ERROR: -205, // 添加类别失败
 
@@ -61,6 +61,7 @@ export const tips = {
   BAD_ARGUMENTS: "参数错误",
   NO_PERMISSION: "操作无权限",
   NONEXISTING: "操作目标不存在",
+  DONT_MEETING_EXCEPTION: "系统内部不自洽",
 
   TOKEN_UNDEFINED: "您无权限操作此区域",
   TOKEN_OUTDATE: "登录信息已过期，请重新登录",
@@ -90,6 +91,7 @@ export const tips = {
     "查询用户信息失败，用户名和ID只能指定一个",
   USER_QUERY_FAILED_BAD_FORMAT: "查询用户信息失败，格式非法",
   USER_SEARCH_SUCCESS: "搜索用户成功",
+  USER_LIST_SUCCESS: "列出用户成功",
 
   CATEGORY_ADD_SUCCESS: "添加类别成功",
   CATEGORY_ADD_FAILED_NAME_ILLEGAL: "添加类别失败，名称非法",
@@ -98,7 +100,6 @@ export const tips = {
   CATEGORY_MODIFY_SUCCESS: "修改类别成功",
   CATEGORY_MODIFY_FAILED_NAME_EXISTING: "修改类别失败，名称已存在",
   CATEGORY_QUERY_SUCCESS: "查询类别成功",
-  CATEGORY_QUERY_FAILED_BOTH_ID_AND_NAME: "查询类型失败，ID和名称只能指定一个",
   CATEGORY_LIST_SUCCESS: "列出类别成功",
   CATEGORY_LIST_FAILED_TOO_MANY: "列出类别失败，查询数量过多",
   CATEGORY_DELETE_SUCCESS: "删除类别成功",

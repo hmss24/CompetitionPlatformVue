@@ -3,9 +3,9 @@ import Sequelize from "sequelize";
 // 数据库相关API
 
 // 用户名
-const sequelize_username = "competiton_root";
+const sequelize_username = "competition_root";
 // 密码
-const sequelize_password = "competiton_root";
+const sequelize_password = "competition_root";
 // 数据库名
 const sequelize_database = "competition_platform";
 // 数据库主机地址

@@ -7,12 +7,15 @@ import {
   checkPermission,
   checkShortString,
   getBigInt,
+  getOrder,
+  makeArgumentsError,
   makeInternelError,
 } from "@/utils/utils";
 import dayjs from "dayjs";
 import express from "express";
-import { Op } from "sequelize";
+import { FindAndCountOptions, Op } from "sequelize";
 import { deleteRecordsByContest } from "./record";
+import UserModel from "@/models/UserModel";
 
 const router = express.Router();
 
@@ -21,28 +24,24 @@ router.post("/add", async (request, response) => {
   const title: string = request.body.title;
   const description: string | null = request.body.description;
 
-  if (categoryId == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  if (!checkShortString(title))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  if (!checkLongString(description))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  if (
+    categoryId == null ||
+    !checkShortString(title) ||
+    !checkLongString(description)
+  )
+    return response.json(makeArgumentsError());
 
   const userId = request.headers["userid"] as string;
   try {
-    if ((await CategoryModel.findOne({ where: { categoryId } })) != null)
+    if ((await CategoryModel.findOne({ where: { categoryId } })) == null)
       return response.json({
-        code: errorcode.BAD_ARGUMENTS,
-        msg: tips.BAD_ARGUMENTS,
+        code: errorcode.NONEXISTING,
+        msg: tips.NONEXISTING,
+      });
+    if ((await UserModel.findOne({ where: { userId } })) == null)
+      return response.json({
+        code: errorcode.NONEXISTING,
+        msg: tips.NONEXISTING,
       });
     const svalue = await ContestModel.create({
       userId,
@@ -63,12 +62,8 @@ router.post("/add", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const contestId = request.body.contestId;
-  if (!checkBigInt(contestId))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  const contestId = request.query.contestId;
+  if (!checkBigInt(contestId)) return response.json(makeArgumentsError());
 
   try {
     const svalue = await ContestModel.findOne({ where: { contestId } });
@@ -82,7 +77,7 @@ router.delete("/delete", async (request, response) => {
         code: errorcode.NO_PERMISSION,
         msg: tips.NO_PERMISSION,
       });
-    await deleteRecordsByContest(contestId);
+    await deleteRecordsByContest(contestId as any);
     await svalue.destroy();
     return response.json({
       code: errorcode.SUCCESS,
@@ -99,26 +94,13 @@ router.post("/modify", async (request, response) => {
   const title: string | null = request.body.title;
   const description: string | null = request.body.description;
 
-  if (!checkBigInt(contestId))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  if (!checkBigInt(contestId)) return response.json(makeArgumentsError());
   if (categoryId == null && request.body.categoryId != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (title != null && !checkShortString(title))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (description != null && !checkLongString(description))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
 
   try {
     if (
@@ -155,7 +137,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const contestId = request.body.contestId;
+  const contestId = request.query.contestId;
   if (!checkBigInt(contestId))
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
@@ -179,8 +161,8 @@ router.get("/query", async (request, response) => {
       title: svalue.title,
       description: svalue.description,
 
-      createdTime: dayjs(svalue.createdTime).format(),
-      updatedTime: dayjs(svalue.updatedTime).format(),
+      createdTime: svalue.createdTime,
+      updatedTime: svalue.updatedTime,
     });
   } catch (e) {
     return response.json(makeInternelError(e));
@@ -188,61 +170,118 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const userId: string | number | null = request.body.userId;
-  const categoryId: string | number | null = request.body.categoryId;
-  const title: string | null = request.body.title;
-  if (
-    (userId != null && typeof userId != "string") ||
-    (categoryId != null && typeof categoryId != "string") ||
-    (title != null && typeof title != "string")
-  )
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  const {
+    userId,
+    categoryId,
+    title,
+    createdTime,
+    updatedTime,
+    _offset,
+    _limit,
+    order,
+  } = request.query;
+  const where: any = {};
+  const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
 
-  let start: number, lim: number;
+  if (userId == null) {
+  } else if (checkBigInt(userId)) where.userId = userId;
+  else return response.json(makeArgumentsError());
+
+  if (categoryId == null) {
+  } else if (checkBigInt(categoryId)) where.categoryId = categoryId;
+  else return response.json(makeArgumentsError());
+
+  if (title == null) {
+  } else if (checkShortString(title)) where.title = { [Op.like]: `%${title}%` };
+  else return response.json(makeArgumentsError());
+
+  if (createdTime == null) {
+  } else if (
+    createdTime instanceof Array &&
+    createdTime.every((x) => typeof x == "string" || typeof x == "number")
+  ) {
+    switch (createdTime.length) {
+      case 0:
+        break; // ignore
+      case 1:
+        where.createdTime = {
+          [Op.like]: dayjs(createdTime[0] as any).toDate(),
+        };
+        break;
+      case 2:
+        where.createdTime = {
+          [Op.gte]: dayjs(createdTime[0] as any).toDate(),
+          [Op.lte]: dayjs(createdTime[1] as any).toDate(),
+        };
+        break;
+    }
+  } else return response.json(makeArgumentsError());
+
+  if (updatedTime == null) {
+  } else if (
+    updatedTime instanceof Array &&
+    updatedTime.every((x) => typeof x == "string" || typeof x == "number")
+  ) {
+    switch (updatedTime.length) {
+      case 0:
+        break; // ignore
+      case 1:
+        where.updatedTime = {
+          [Op.like]: dayjs(updatedTime[0] as any).toDate(),
+        };
+        break;
+      case 2:
+        where.updatedTime = {
+          [Op.gte]: dayjs(updatedTime[0] as any).toDate(),
+          [Op.lte]: dayjs(updatedTime[1] as any).toDate(),
+        };
+        break;
+    }
+  } else return response.json(makeArgumentsError());
+
+  if (typeof _limit == "number" || typeof _limit == "string") {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
+      return response.json(makeArgumentsError());
+    opt.limit = limit;
+  } else if (_limit == null) opt.limit = 100;
+  else return response.json(makeArgumentsError());
+
+  if (typeof _offset == "number" || typeof _offset == "string") {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
+    opt.offset = offset;
+  } else if (_offset == null) opt.offset = 0;
+  else return response.json(makeArgumentsError());
+
+  opt.include = [
+    { model: UserModel, as: "userTable" },
+    { model: CategoryModel, as: "categoryTable" },
+  ];
+  opt.order = getOrder(order)?.map((x) => {
+    switch (x[0]) {
+      case "nickname":
+        return ["userTable", ...x];
+      case "categoryName":
+        return ["categoryTable", ...x];
+      default:
+        return x;
+    }
+  });
+
   try {
-    if (request.body.start) {
-      start = parseInt(request.body.start);
-      if (!Number.isInteger(start)) throw TypeError("integer desired");
-    } else start = 0;
-    if (request.body.lim) {
-      lim = parseInt(request.body.lim);
-      if (!Number.isInteger(lim)) throw TypeError("integer desired");
-    } else lim = QUERY_MAX_LIMIT;
-  } catch (e) {
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  }
-  if (lim > QUERY_MAX_LIMIT) {
-    return response.json({
-      code: errorcode.CONTEST_LIST_ERROR,
-      msg: tips.CONTEST_LIST_FAILED_TOO_MANY,
-    });
-  }
-
-  try {
-    const where: any = {};
-    if (userId != null) where.userId = userId;
-    if (categoryId != null) where.categoryId = categoryId;
-    if (title != null) where.title = { [Op.like]: `%${title}%` };
-
-    const svalue = await ContestModel.findAll({
-      where,
-      offset: start,
-      limit: lim,
-      order: [["contestId", "DESC"]],
-    });
+    const svalue = await ContestModel.findAndCountAll(opt);
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CONTEST_LIST_SUCCESS,
-      data: svalue.map((x) => ({
+      count: svalue.count,
+      data: svalue.rows.map((x) => ({
         contestId: x.contestId,
         userId: x.userId,
         categoryId: x.categoryId,
+
+        nickname: ((x as any).userTable as UserModel).nickname,
+        categoryName: ((x as any).categoryTable as CategoryModel).name,
 
         title: x.title,
         description: x.description,
@@ -250,59 +289,6 @@ router.get("/list", async (request, response) => {
         createdTime: dayjs(x.createdTime).format(),
         updatedTime: dayjs(x.updatedTime).format(),
       })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
-
-router.get("/list_count", async (request, response) => {
-  const userId: string | null = request.body.userId;
-  const categoryId: string | null = request.body.categoryId;
-  const title: string | null = request.body.title;
-  if (
-    (userId != null && typeof userId != "string") ||
-    (categoryId != null && typeof categoryId != "string") ||
-    (title != null && typeof title != "string")
-  )
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-
-  let start: number, lim: number;
-  try {
-    if (request.body.start) {
-      start = parseInt(request.body.start);
-      if (!Number.isInteger(start)) throw TypeError("integer desired");
-    } else start = 0;
-    if (request.body.lim) {
-      lim = parseInt(request.body.lim);
-      if (!Number.isInteger(lim)) throw TypeError("integer desired");
-    } else lim = QUERY_MAX_LIMIT;
-  } catch (e) {
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  }
-  if (lim > QUERY_MAX_LIMIT)
-    return response.json({
-      code: errorcode.CATEGORY_LIST_ERROR,
-      msg: tips.CATEGORY_LIST_FAILED_TOO_MANY,
-    });
-
-  try {
-    const where: any = {};
-    if (userId != null) where.userId = userId;
-    if (categoryId != null) where.categoryId = categoryId;
-    if (title != null) where.title = { [Op.like]: `%${title}%` };
-
-    const count = await ContestModel.count({ where });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.CONTEST_LIST_SUCCESS,
-      count: count,
     });
   } catch (e) {
     return response.json(makeInternelError(e));

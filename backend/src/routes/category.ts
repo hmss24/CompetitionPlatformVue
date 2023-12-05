@@ -1,5 +1,6 @@
 import CategoryModel from "@/models/CategoryModel";
 import ContestModel from "@/models/ContestModel";
+import UserModel from "@/models/UserModel";
 import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import {
   checkBigInt,
@@ -7,37 +8,25 @@ import {
   checkPermission,
   checkShortString,
   getBigInt,
+  getOrder,
+  makeArgumentsError,
   makeInternelError,
 } from "@/utils/utils";
 import dayjs from "dayjs";
-import express, { response } from "express";
-import { Op, ValidationError } from "sequelize";
+import express from "express";
+import { FindAndCountOptions, Op, ValidationError, or } from "sequelize";
 
 const router = express.Router();
 
 router.get("/query", async (request, response) => {
-  const categoryId: string | number = request.body.categoryId;
-  const name: string = request.body.name;
+  const categoryId = request.query.categoryId;
+  const name = request.query.name;
   if (!checkBigInt(categoryId) && request.body.categoryId != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (!checkShortString(name) && request.body.name != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+    return response.json(makeArgumentsError());
   if (categoryId == null && name == null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  if (categoryId != null && name != null)
-    return response.json({
-      code: errorcode.CATEGORY_QUERY_ERROR,
-      msg: tips.CATEGORY_QUERY_FAILED_BOTH_ID_AND_NAME,
-    });
+    return response.json(makeArgumentsError());
 
   try {
     const svalue = await CategoryModel.findOne({
@@ -48,16 +37,25 @@ router.get("/query", async (request, response) => {
         code: errorcode.NONEXISTING,
         msg: tips.NONEXISTING,
       });
+    const nickname = (
+      await UserModel.findOne({ where: { userId: svalue.userId } })
+    )?.nickname;
+    if (nickname == null)
+      return response.json({
+        code: errorcode.DONT_MEETING_EXCEPTION,
+        msg: tips.DONT_MEETING_EXCEPTION,
+      });
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CATEGORY_QUERY_SUCCESS,
       data: {
         categoryId: svalue.categoryId,
         userId: svalue.userId,
+        nickname,
         name: svalue.name,
         description: svalue.description,
-        createdTime: dayjs(svalue.createdTime).format(),
-        updatedTime: dayjs(svalue.updatedTime).format(),
+        createdTime: svalue.createdTime,
+        updatedTime: svalue.updatedTime,
       },
     });
   } catch (e) {
@@ -80,6 +78,15 @@ router.post("/add", async (request, response) => {
     });
 
   try {
+    if (
+      (await UserModel.findOne({
+        where: { userId: request.headers["userid"] },
+      })) == null
+    )
+      return response.json({
+        code: errorcode.NONEXISTING,
+        msg: tips.NONEXISTING,
+      });
     const svalue = await CategoryModel.create({
       userId: request.headers["userid"],
       name,
@@ -157,7 +164,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.delete("/delete", async (request, response) => {
-  const categoryId = getBigInt(request.body.categoryId);
+  const categoryId = getBigInt(request.query.categoryId);
   if (categoryId == null)
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
@@ -170,9 +177,7 @@ router.delete("/delete", async (request, response) => {
         code: errorcode.CATEGORY_DELETE_ERROR,
         msg: tips.CATEGORY_DELETE_FAILED_OCCUPIED,
       });
-    const svalue = await CategoryModel.findOne({
-      where: { categoryId },
-    });
+    const svalue = await CategoryModel.findOne({ where: { categoryId } });
     if (svalue == null)
       return response.json({
         code: errorcode.NONEXISTING,
@@ -199,104 +204,104 @@ router.delete("/delete", async (request, response) => {
   }
 });
 
-router.get("/search", async (request, response) => {
-  const name: string = request.body.name;
-  if (!checkShortString(name))
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-
-  try {
-    const svalue = await CategoryModel.findAll({
-      where: { name: { [Op.like]: `%${name}%` } },
-      limit: QUERY_MAX_LIMIT,
-    });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.CATEGORY_QUERY_SUCCESS,
-      data: svalue.map((x) => ({
-        categoryId: x.categoryId,
-        userId: x.userId,
-        name: x.name,
-        description: x.description,
-        createdTime: dayjs(x.createdTime).format(),
-        updatedTime: dayjs(x.updatedTime).format(),
-      })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
-
 router.get("/list", async (request, response) => {
-  const userId = getBigInt(request.body.userId);
-  if (userId == null && request.body.userId != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
+  const where: any = {};
+  const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
+  const { userId, name, createdTime, updatedTime, _offset, _limit, order } =
+    request.query;
 
-  let start: number, lim: number;
-  try {
-    if (request.body.start) {
-      start = parseInt(request.body.start);
-      if (!Number.isInteger(start)) throw TypeError("integer desired");
-    } else start = 0;
-    if (request.body.lim) {
-      lim = parseInt(request.body.lim);
-      if (!Number.isInteger(lim)) throw TypeError("integer desired");
-    } else lim = QUERY_MAX_LIMIT;
-  } catch (e) {
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-  }
-  if (lim > QUERY_MAX_LIMIT)
-    return response.json({
-      code: errorcode.CATEGORY_LIST_ERROR,
-      msg: tips.CATEGORY_LIST_FAILED_TOO_MANY,
-    });
+  if (userId == null) {
+  } else if (checkBigInt(userId)) where.userId = userId;
+  else return response.json(makeArgumentsError());
+
+  if (name == null) {
+  } else if (checkShortString(name)) where.name = { [Op.like]: `%${name}%` };
+  else return response.json(makeArgumentsError());
+
+  if (createdTime == null) {
+  } else if (
+    createdTime instanceof Array &&
+    createdTime.every((x) => typeof x == "string" || typeof x == "number")
+  ) {
+    switch (createdTime.length) {
+      case 0:
+        break; // ignore
+      case 1:
+        where.createdTime = {
+          [Op.like]: dayjs(createdTime[0] as string).toDate(),
+        };
+        break;
+      case 2:
+        where.createdTime = {
+          [Op.gte]: dayjs(createdTime[0] as string).toDate(),
+          [Op.lte]: dayjs(createdTime[1] as string).toDate(),
+        };
+        break;
+    }
+  } else return response.json(makeArgumentsError());
+
+  if (updatedTime == null) {
+  } else if (
+    updatedTime instanceof Array &&
+    updatedTime.every((x) => typeof x == "string" || typeof x == "number")
+  ) {
+    switch (updatedTime.length) {
+      case 0:
+        break; // ignore
+      case 1:
+        where.updatedTime = {
+          [Op.like]: dayjs(updatedTime[0] as string).toDate(),
+        };
+        break;
+      case 2:
+        where.updatedTime = {
+          [Op.gte]: dayjs(updatedTime[0] as string).toDate(),
+          [Op.lte]: dayjs(updatedTime[1] as string).toDate(),
+        };
+        break;
+    }
+  } else return response.json(makeArgumentsError());
+
+  if (typeof _limit == "number" || typeof _limit == "string") {
+    const limit = +_limit;
+    if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
+      return response.json(makeArgumentsError());
+    opt.limit = limit;
+  } else if (_limit == null) opt.limit = 100;
+  else return response.json(makeArgumentsError());
+
+  if (typeof _offset == "number" || typeof _offset == "string") {
+    const offset = +_offset;
+    if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
+    opt.offset = offset;
+  } else if (_offset == null) opt.offset = 0;
+  else return response.json(makeArgumentsError());
+
+  opt.include = [{ model: UserModel, as: "userTable" }];
+  opt.order = getOrder(order)?.map((x) => {
+    switch (x[0]) {
+      case "nickname":
+        return ["userTable", ...x];
+      default:
+        return x;
+    }
+  });
 
   try {
-    const svalue = await CategoryModel.findAll({
-      where: userId ? { userId } : undefined,
-      offset: start,
-      limit: lim,
-      order: [["categoryId", "DESC"]],
-    });
+    const svalue = await CategoryModel.findAndCountAll(opt);
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.CATEGORY_LIST_SUCCESS,
-      data: svalue.map((x) => ({
+      count: svalue.count,
+      data: svalue.rows.map((x) => ({
         categoryId: x.categoryId,
         userId: x.userId,
         name: x.name,
         description: x.description,
-        createdTime: dayjs(x.createdTime).format(),
-        updatedTime: dayjs(x.updatedTime).format(),
+        createdTime: x.createdTime,
+        updatedTime: x.updatedTime,
+        nickname: ((x as any).userTable as UserModel).nickname,
       })),
-    });
-  } catch (e) {
-    return response.json(makeInternelError(e));
-  }
-});
-
-router.get("/list_count", async (request, response) => {
-  const userId = getBigInt(request.body.userId);
-  if (userId == null && request.body.userId != null)
-    return response.json({
-      code: errorcode.BAD_ARGUMENTS,
-      msg: tips.BAD_ARGUMENTS,
-    });
-
-  try {
-    const count = await CategoryModel.count({ where: { userId } });
-    return response.json({
-      code: errorcode.SUCCESS,
-      msg: tips.CATEGORY_LIST_SUCCESS,
-      count: count,
     });
   } catch (e) {
     return response.json(makeInternelError(e));

@@ -10,3 +10,5 @@ import { NDialogProvider, NMessageProvider } from 'naive-ui'
     </NDialogProvider>
   </NMessageProvider>
 </template>
+
+<style></style>

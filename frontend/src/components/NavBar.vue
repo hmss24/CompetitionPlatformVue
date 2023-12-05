@@ -1,24 +1,30 @@
 <template>
   <NLayout has-sider>
-    <NLayoutSider content-style="padding: 12px;" :width="200" style="height: calc(100%)">
-      <NMenu :options="menuOptions" :value="getMenu()" />
-      <NMenu
-        :options="userMenuOptions"
-        :value="''"
-        style="bottom: 0; position: absolute; width: 100%"
-      />
-    </NLayoutSider>
+    <n-config-provider :theme="theme">
+      <NLayoutSider content-style="padding: 12px;" :width="200" style="height: calc(100%)">
+        <NMenu :options="menuOptions" :value="getMenu()" />
+        <NMenu
+          :options="userMenuOptions"
+          :value="''"
+          style="bottom: 0; position: absolute; width: 100%"
+        />
+      </NLayoutSider>
+    </n-config-provider>
+
     <NLayoutContent has-sider>
-      <NLayout
-        style="height: calc(100% - 64px)"
-        content-style="padding: 24px; "
-        :native-scrollbar="false"
-      >
-        <slot></slot>
-      </NLayout>
-      <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
-        ❤️ 由东华大学第9组创建 ❤️
-      </NLayoutFooter>
+      <n-config-provider :theme="theme" style="width: 100%">
+        <NLayout
+          style="height: calc(100% - 64px)"
+          content-style="padding: 24px; "
+          :native-scrollbar="false"
+        >
+          <slot></slot>
+        </NLayout>
+
+        <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
+          ❤️ 由东华大学第9组创建 ❤️
+        </NLayoutFooter>
+      </n-config-provider>
     </NLayoutContent>
   </NLayout>
 </template>
@@ -31,9 +37,13 @@ import {
   NLayoutSider,
   type MenuOption,
   NMenu,
-  NDropdown
+  NDropdown,
+  NSwitch,
+  darkTheme,
+  NConfigProvider,
+  type GlobalTheme
 } from 'naive-ui'
-
+import { ref } from 'vue'
 const route = useRoute()
 const router = useRouter()
 
@@ -70,10 +80,20 @@ const handleLogout = async () => {
   router.go(0)
 }
 
+const theme = ref<GlobalTheme | null>(null)
+
+function ChangeTheme() {
+  theme.value = theme.value === null ? darkTheme : null
+}
+
 const userMenuOptions: MenuOption[] = [
   {
     key: 'change_theme',
-    label: () => <a style="color: blue">切换主题</a>
+    label: () => (
+      <NSwitch size="large" onUpdate:value={ChangeTheme}>
+        切换主题
+      </NSwitch>
+    )
   },
   {
     key: 'login',
@@ -93,5 +113,6 @@ const userMenuOptions: MenuOption[] = [
 
 <script lang="tsx">
 import { apiUserLogout } from '@/api/user'
+
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 </script>

@@ -72,7 +72,7 @@ router.post("/add", async (request, response) => {
 router.delete("/delete", async (request, response) => {
   const _recordIds: any = request.query.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
-  if (!recordIds.every((x) => checkBigInt(recordIds)))
+  if (!recordIds.every((x) => checkBigInt(x)))
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
@@ -158,8 +158,15 @@ router.post("/modify", async (request, response) => {
     });
     const userid = request.headers["userid"];
     const contestMap = new Map<string, boolean>();
+    const asyncEvery = async <T>(
+      arr: T[],
+      fn: (element: T) => Promise<boolean>
+    ) => {
+      for (let s of arr) if (!(await fn(s))) return false;
+      return true;
+    };
     if (
-      !datas.every(async (x) => {
+      !(await asyncEvery(datas, async (x) => {
         if (checkPermission(userid, x.playerId)) return true;
         if (!contestMap.has(x.contestId)) {
           try {
@@ -175,7 +182,7 @@ router.post("/modify", async (request, response) => {
           }
         }
         return contestMap.get(x.contestId);
-      })
+      }))
     )
       return response.json({
         code: errorcode.NO_PERMISSION,
@@ -199,7 +206,7 @@ router.post("/modify", async (request, response) => {
 router.get("/query", async (request, response) => {
   const _recordIds: any = request.query.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
-  if (!recordIds.every((x) => checkBigInt(recordIds)))
+  if (!recordIds.every((x) => checkBigInt(x)))
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
@@ -276,7 +283,7 @@ router.get("/list", async (request, response) => {
         contestId: x.contestId,
         playerId: x.playerId,
         score: x.score,
-        playerNickname: ((x as any).userTable as UserModel).nickname,
+        playerNickname: ((x as any).userTable as UserModel)?.nickname,
       })),
     });
   } catch (e) {

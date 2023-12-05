@@ -210,11 +210,11 @@ router.get("/list", async (request, response) => {
   const { userId, name, createdTime, updatedTime, _offset, _limit, order } =
     request.query;
 
-  if (userId == null) {
+  if (userId == null || userId === '') {
   } else if (checkBigInt(userId)) where.userId = userId;
   else return response.json(makeArgumentsError());
 
-  if (name == null) {
+  if (name == null || name === '') {
   } else if (checkShortString(name)) where.name = { [Op.like]: `%${name}%` };
   else return response.json(makeArgumentsError());
 

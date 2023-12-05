@@ -1,21 +1,21 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
   <NavBar>
-    <div style="display: flex; justify-content: space-between">
-      <NSpace>
-        <p>共 {{ tableData.length }} 条</p>
-        <NInput
-          placeholder="按回车查找"
-          v-model:value="searchText"
-          clearable
-          @keyup="handleSearchKeyup"
-        />
-      </NSpace>
+    <NSpace align="center" justify="space-between">
+      <NH1> 分类列表 </NH1>
       <NSpace style="margin-right: 0">
         <NButton color="#5d5cde" round @click="showAddModal">添加</NButton>
         <NButton color="#4caf50" round @click="handleRefreshClick">刷新</NButton>
       </NSpace>
-    </div>
+    </NSpace>
+    <NSpace justify="end" style="margin-bottom: 16px">
+      <NInput
+        placeholder="按回车查找"
+        v-model:value="searchText"
+        clearable
+        @keyup="handleSearchKeyup"
+      />
+    </NSpace>
     <NDataTable :columns="tableColumns" :data="tableData" :pagination="paginationProp" />
 
     <NModal v-model:show="shouldShowModal" :auto-focus="false" :mask-closable="false">
@@ -58,15 +58,16 @@
 import NavBar from '@/components/NavBar.vue'
 import {
   NButton,
+  NCard,
   NDataTable,
+  NForm,
+  NFormItem,
+  NH1,
   NInput,
+  NModal,
   NSpace,
   useMessage,
   type DataTableColumns,
-  NModal,
-  NCard,
-  NForm,
-  NFormItem,
   type FormRules,
   type PaginationProps
 } from 'naive-ui'
@@ -241,8 +242,8 @@ import {
   apiCategoryList,
   apiCategoryModify
 } from '@/api/category'
-import { reactive, ref } from 'vue'
 import { APIError, getAPIErrorInfo } from '@/api/request'
+import { reactive, ref } from 'vue'
 
 let rawtableData: Awaited<ReturnType<typeof apiCategoryList>>['data'] = []
 </script>

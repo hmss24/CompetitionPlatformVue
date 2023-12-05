@@ -33,12 +33,12 @@ router.post("/add", async (request, response) => {
 
   const userId = request.headers["userid"] as string;
   try {
-    if ((await CategoryModel.findOne({ where: { categoryId } })) != null)
+    if ((await CategoryModel.findOne({ where: { categoryId } })) == null)
       return response.json({
         code: errorcode.NONEXISTING,
         msg: tips.NONEXISTING,
       });
-    if ((await UserModel.findOne({ where: { userId } })) != null)
+    if ((await UserModel.findOne({ where: { userId } })) == null)
       return response.json({
         code: errorcode.NONEXISTING,
         msg: tips.NONEXISTING,

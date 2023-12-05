@@ -49,7 +49,7 @@ export async function apiRecordModify(
     )
   )
     throw new APIError('记录形式错误')
-  await request.post('/record/modify', data, { headers: generateHeader() ?? {} })
+  await request.post('/record/modify', { data }, { headers: generateHeader() ?? {} })
   return
 }
 
@@ -74,8 +74,7 @@ export async function apiRecordList(conf: {
   order?: string[] | string
 }) {
   if (!checkBigInt(conf.contestId)) throw new APIError('比赛ID非法')
-  console.log(conf)
-  const data = (await request.get('/record/list',  { params: conf })).data
+  const data = (await request.get('/record/list', { params: conf })).data
   return {
     count: data.count as number,
     data: (data.data as any[]).map((x) => ({

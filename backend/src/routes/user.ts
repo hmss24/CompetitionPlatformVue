@@ -108,6 +108,7 @@ router.post("/login", async (request, response) => {
     response.setHeader("token", token.toString());
     response.setHeader("userid", svalue.userId.toString());
     response.setHeader("username", username.toString());
+    response.setHeader("nickname", svalue.nickname.toString());
     response.setHeader(
       "Access-Control-Expose-Headers",
       "token,username,userid"
@@ -225,7 +226,7 @@ router.get("/list", async (request, response) => {
   const { nickname, _offset, _limit } = request.query;
 
   if (typeof nickname == "string") {
-    if (!checkShortString(nickname)) return response.json(makeArgumentsError());
+    if (nickname.length > 1 && !checkShortString(nickname)) return response.json(makeArgumentsError());
     opt.where = { nickname: { [Op.like]: `%${nickname}%` } };
   } else if (nickname != null) return response.json(makeArgumentsError());
   

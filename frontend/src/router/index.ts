@@ -8,33 +8,35 @@ const ROUTERS: RouteRecordRaw[] = [
     meta: { needLogin: true }
   },
   {
-    path:'/login',
-    name:'login',
-    component: () => import('@/pages/LoginPage.vue'),
+    path: '/login',
+    name: 'login',
+    component: () => import('@/pages/LoginPage.vue')
   },
   {
     path: '/category',
     name: 'category',
-    component: () => import('@/pages/category.vue'),
-    meta: { needLogin: true }
+    component: () => import('@/pages/category.vue')
   },
   {
     path: '/contest',
     name: 'contest',
-    component: () => import('@/pages/contest/index.vue'),
-    meta: { needLogin: true }
+    component: () => import('@/pages/contest/index.vue')
   },
   {
-    path: '/contest/edit',
+    path: '/contest/edit/:id(\\d+)',
     name: 'contestEdit',
-    component: () => import('@/pages/contest/edit.vue'),
-    meta: { needLogin: true }
+    component: () => import('@/pages/contest/edit.vue')
   },
   {
-    path:'/register',
-    name:'register',
-    component: () => import('@/pages/RegisterPage.vue'),
-  },
+    path: '/contest/view/:id(\\d+)',
+    name: 'contestView',
+    component: () => import('@/pages/contest/view.vue')
+  }
+  // {
+  //   path:'/register',
+  //   name:'register',
+  //   component: () => import('@/pages/RegisterPage.vue'),
+  // },
 ]
 
 const router = createRouter({

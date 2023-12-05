@@ -9,7 +9,11 @@
       />
     </NLayoutSider>
     <NLayoutContent has-sider>
-      <NLayout style="height: calc(100% - 64px);" content-style="padding: 24px; " :native-scrollbar="false">
+      <NLayout
+        style="height: calc(100% - 64px)"
+        content-style="padding: 24px; "
+        :native-scrollbar="false"
+      >
         <slot></slot>
       </NLayout>
       <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
@@ -19,7 +23,7 @@
   </NLayout>
 </template>
 
-<script lang="ts">
+<script setup lang="tsx">
 import {
   NLayout,
   NLayoutContent,
@@ -27,22 +31,28 @@ import {
   NLayoutSider,
   type MenuOption,
   NMenu,
+  NDropdown
 } from 'naive-ui'
-import { defineComponent, h } from 'vue'
-import { RouterLink, useRoute } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+function getMenu() {
+  return route.path.split('/', 2)[1] || 'homepage'
+}
 
 const menuOptions: MenuOption[] = [
   {
     key: 'homepage',
-    label: () => h(RouterLink, { to: { path: '/' } }, { default: () => '首页' })
+    label: () => <RouterLink to={{ path: '/' }}>首页</RouterLink>
   },
   {
     key: 'category',
-    label: () => h(RouterLink, { to: { path: '/category' } }, { default: () => '分类列表' })
+    label: () => <RouterLink to={{ path: '/category' }}>分类列表</RouterLink>
   },
   {
     key: 'contest',
-    label: () => h(RouterLink, { to: { path: '/contest' } }, { default: () => '比赛列表' })
+    label: () => <RouterLink to={{ path: '/contest' }}>比赛列表</RouterLink>
   }
 ]
 function getNickname() {
@@ -50,64 +60,38 @@ function getNickname() {
   return nickname
 }
 
+const handleLogout = async () => {
+  localStorage.removeItem('userid')
+  localStorage.removeItem('username')
+  localStorage.removeItem('nickname')
+  localStorage.removeItem('token')
+  apiUserLogout()
+  console.log(router)
+  router.go(0)
+}
+
 const userMenuOptions: MenuOption[] = [
   {
     key: 'change_theme',
-    label: () => h('a', {}, '切换主题')
+    label: () => <a style="color: blue">切换主题</a>
   },
   {
     key: 'login',
-    label: () =>
-      h(RouterLink, { to: { path: '/login' } }, { default: () => getNickname() ?? '<未登录>' })
+    label: () => <RouterLink to={{ path: '/login' }}>{getNickname() ?? '<未登录>'}</RouterLink>
   },
   {
     key: 'logout',
-    label: () => h('a', { style: 'color: red' }, '退出登录')
+    disabled: localStorage.getItem('nickname') == null,
+    label: () => (
+      <a style="color: red" onClick={handleLogout}>
+        退出登录
+      </a>
+    )
   }
 ]
-
-const userLoginedOptions = [
-  {
-    label: '个人信息',
-    key: 'personal'
-  },
-  {
-    label: '退出登录',
-    key: 'logout'
-  }
-]
-const userUnloginedOptions: any[] = []
-
-function handleUserSelect(key: string | number) {
-  console.log(key)
-}
-
-export default defineComponent({
-  components: {
-    NLayout,
-    NLayoutContent,
-    NLayoutFooter,
-    NLayoutSider,
-    NMenu
-  },
-  setup() {
-    const route = useRoute()
-    function getMenu() {
-      return route.path.split('/', 2)[1] || 'homepage'
-    }
-    function getUserOptions() {
-      return getNickname() != null ? userLoginedOptions : userUnloginedOptions
-    }
-    return {
-      menuOptions,
-      getMenu,
-      getUserOptions,
-      handleUserSelect,
-      getNickname,
-      userMenuOptions
-    }
-  }
-})
 </script>
 
-<style scoped></style>
+<script lang="tsx">
+import { apiUserLogout } from '@/api/user'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
+</script>

@@ -132,6 +132,7 @@ router.post("/modify", async (request, response) => {
   if (
     !data.every(
       (x) =>
+        x != null &&
         checkBigInt(x.recordId) &&
         (x.playerId == null || checkBigInt(x.playerId)) &&
         (x.score == null || typeof x.score == "number")
@@ -152,17 +153,36 @@ router.post("/modify", async (request, response) => {
   }
 
   try {
-    const datas = await ContestModel.findAll({
+    const datas = await RecordModel.findAll({
       where: { recordId: data.map((x) => x.recordId) },
     });
     const userid = request.headers["userid"];
-    if (!datas.every((x) => checkPermission(userid, x.userId)))
+    const contestMap = new Map<string, boolean>();
+    if (
+      !datas.every(async (x) => {
+        if (checkPermission(userid, x.playerId)) return true;
+        if (!contestMap.has(x.contestId)) {
+          try {
+            const svalue = await ContestModel.findOne({
+              where: { contestId: x.contestId },
+            });
+            contestMap.set(
+              x.contestId,
+              checkPermission(userid, svalue != null && svalue.userId)
+            );
+          } catch (e) {
+            contestMap.set(x.contestId, false);
+          }
+        }
+        return contestMap.get(x.contestId);
+      })
+    )
       return response.json({
         code: errorcode.NO_PERMISSION,
         msg: tips.NO_PERMISSION,
       });
     for (let x of datas) {
-      const [playerId, score] = dataMap.get(x.contestId.toString());
+      const [playerId, score] = dataMap.get(x.recordId.toString());
       if (playerId != null) x.set("playerId", playerId);
       if (score != null) x.set("score", score);
       await x.save();
@@ -177,8 +197,7 @@ router.post("/modify", async (request, response) => {
 });
 
 router.get("/query", async (request, response) => {
-  const _recordIds: any =
-    request.query.recordId;
+  const _recordIds: any = request.query.recordId;
   let recordIds = _recordIds instanceof Array ? _recordIds : [_recordIds];
   if (!recordIds.every((x) => checkBigInt(recordIds)))
     return response.json({

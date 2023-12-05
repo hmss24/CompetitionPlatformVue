@@ -1,6 +1,5 @@
 <template>
   <div class="bk">   
-  <!-- <time/> -->
       <div class="button background">
           <div class="day">
               <div class="star" :class="`${dayNight?.active}`" @click="slide()">
@@ -19,7 +18,6 @@
                   <span v-for="white of 6" :title="String(white)" :key='white'></span>
               </div>
               <div class="stars" :class="`${dayNight?.starsActie}`">
-                  <!-- 使用此插件也可以完成icon的书写 此处为笔者自定义icon属性 -->
                   <icon iconfont="icon-xingxing3" v-for="star of 6" :title="star" :key='star'/>
               </div>
           </div>

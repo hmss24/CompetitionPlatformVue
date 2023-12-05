@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
 import { NMessageProvider } from 'naive-ui'
+
+
 </script>
 
 <template>
@@ -8,3 +10,10 @@ import { NMessageProvider } from 'naive-ui'
     <RouterView style="height: 100%" />
   </NMessageProvider>
 </template>
+
+<style>
+#app {
+  color: var(--text-color);
+  background-color: var(--bg-color);
+}
+</style>

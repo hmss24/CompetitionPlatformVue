@@ -9,7 +9,11 @@
       />
     </NLayoutSider>
     <NLayoutContent has-sider>
-      <NLayout style="height: calc(100% - 64px);" content-style="padding: 24px; " :native-scrollbar="false">
+      <NLayout
+        style="height: calc(100% - 64px)"
+        content-style="padding: 24px; "
+        :native-scrollbar="false"
+      >
         <slot></slot>
       </NLayout>
       <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
@@ -26,7 +30,7 @@ import {
   NLayoutFooter,
   NLayoutSider,
   type MenuOption,
-  NMenu,
+  NMenu
 } from 'naive-ui'
 import { defineComponent, h } from 'vue'
 import { RouterLink, useRoute } from 'vue-router'
@@ -53,7 +57,8 @@ function getNickname() {
 const userMenuOptions: MenuOption[] = [
   {
     key: 'change_theme',
-    label: () => h('a', {}, '切换主题')
+    label: () => h('Button', {onClick: (val: Boolean) => {
+    } }, '切换主题')
   },
   {
     key: 'login',
@@ -81,6 +86,7 @@ const userUnloginedOptions: any[] = []
 function handleUserSelect(key: string | number) {
   console.log(key)
 }
+
 
 export default defineComponent({
   components: {

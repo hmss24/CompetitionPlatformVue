@@ -30,11 +30,6 @@ const ROUTERS: RouteRecordRaw[] = [
     component: () => import('@/pages/contest/edit.vue'),
     meta: { needLogin: true }
   },
-  {
-    path:'/register',
-    name:'register',
-    component: () => import('@/pages/RegisterPage.vue'),
-  },
 ]
 
 const router = createRouter({

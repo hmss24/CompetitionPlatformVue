@@ -10,23 +10,22 @@
         />
       </NLayoutSider>
     </n-config-provider>
-    
-      <NLayoutContent has-sider>
-        <n-config-provider :theme="theme" style="width: 100%;">
-          <NLayout
+
+    <NLayoutContent has-sider>
+      <n-config-provider :theme="theme" style="width: 100%">
+        <NLayout
           style="height: calc(100% - 64px)"
           content-style="padding: 24px; "
           :native-scrollbar="false"
         >
           <slot></slot>
         </NLayout>
-      
+
         <NLayoutFooter bordered position="absolute" style="height: 64px; padding: 24px">
           ❤️ 由东华大学第9组创建 ❤️
         </NLayoutFooter>
       </n-config-provider>
-      </NLayoutContent>
-      
+    </NLayoutContent>
   </NLayout>
 </template>
 
@@ -84,13 +83,17 @@ const handleLogout = async () => {
 const theme = ref<GlobalTheme | null>(null)
 
 function ChangeTheme() {
-  theme.value = (theme.value === null) ? darkTheme : null
+  theme.value = theme.value === null ? darkTheme : null
 }
 
 const userMenuOptions: MenuOption[] = [
   {
     key: 'change_theme',
-    label: () => <a onClick={ChangeTheme}>切换主题</a>
+    label: () => (
+      <NSwitch size="large" onUpdate:value={ChangeTheme}>
+        切换主题
+      </NSwitch>
+    )
   },
   {
     key: 'login',

@@ -112,7 +112,7 @@ const handleLoginClick = async () => {
   height: 100vh;
   align-items: center;
   text-align: center;
-  background-image: url('@/assets/img/6CE1C14B1530CC53A70EC811E4D49709.jpg');
+  background-image: url('@/assets/img/500549039.jpg');
   background-size: cover;
   background-position: center center;
   background-attachment: local;
@@ -126,7 +126,7 @@ const handleLoginClick = async () => {
     /*让弹性项目在交叉轴方向水平居中  现在主轴的方向是向下  
     交叉轴的方向是与主轴垂直 交叉轴的方向是向右*/
     width: 450px;
-    background-color: rgb(41, 45, 62);
+    background-color: rgb(74, 75, 76);
     color: #fff;
     padding: 30px 70px 80px;
     border-radius: 15px;
@@ -186,7 +186,7 @@ const handleLoginClick = async () => {
 
 .main > .inpbox input {
   position: relative;
-  background-color: rgb(41, 45, 62);
+  background-color: rgb(74, 75, 76);
   border: 0;
   width: 40%;
   text-align: center;

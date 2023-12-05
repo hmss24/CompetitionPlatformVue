@@ -31,10 +31,10 @@ const ROUTERS: RouteRecordRaw[] = [
     meta: { needLogin: true }
   },
   {
-    path:'/register',
-    name:'register',
-    component: () => import('@/pages/RegisterPage.vue'),
-  },
+    path: '/NLogin',
+    name:'NLogin',
+    component: () => import('@/pages/NLoginPage.vue'),
+  }
 ]
 
 const router = createRouter({

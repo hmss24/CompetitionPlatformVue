@@ -25,6 +25,7 @@ const ROUTERS: RouteRecordRaw[] = [
   {
     path: '/contest/edit/:id(\\d+)',
     name: 'contestEdit',
+<<<<<<< HEAD
     component: () => import('@/pages/contest/edit.vue')
   },
   // {
@@ -37,6 +38,16 @@ const ROUTERS: RouteRecordRaw[] = [
   //   name:'register',
   //   component: () => import('@/pages/RegisterPage.vue'),
   // },
+=======
+    component: () => import('@/pages/contest/edit.vue'),
+    meta: { needLogin: true }
+  },
+  {
+    path: '/NLogin',
+    name:'NLogin',
+    component: () => import('@/pages/NLoginPage.vue'),
+  }
+>>>>>>> b8af5b5 (临时)
 ]
 
 const router = createRouter({

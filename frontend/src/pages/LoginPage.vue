@@ -33,7 +33,7 @@ import { apiUserLogin, apiUserSignup } from '@/api/user'
 import { useMessage, NIcon } from 'naive-ui'
 import { APIError } from '@/api/request'
 import router from '@/router'
-import { defineComponent, ref } from 'vue'
+import { ref } from 'vue'
 import { CloseCircleOutline } from '@vicons/ionicons5'
 import {} from 'naive-ui'
 
@@ -41,8 +41,6 @@ const userp = ref('')
 const usern = ref('')
 const ruserp = ref('')
 const $msg = useMessage()
-
-const close = ref('closeicon')
 
 let status = ref(false)
 
@@ -61,7 +59,7 @@ const handleRegisterClick = async () => {
       if (ruserp.value == '' || userp.value == '' || usern.value == '') {
         throw new APIError({ code: -99, msg: '不能为空' })
       }
-      const x = await apiUserSignup({
+      await apiUserSignup({
         nickname: usern.value,
         username: usern.value,
         password: userp.value

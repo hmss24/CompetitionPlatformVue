@@ -23,6 +23,11 @@ const ROUTERS: RouteRecordRaw[] = [
     component: () => import('@/pages/contest/index.vue')
   },
   {
+    path: '/person',
+    name: 'person',
+    component: () => import('@/pages/personfile/index.vue')
+  },
+  {
     path: '/contest/edit/:id(\\d+)',
     name: 'contestEdit',
     component: () => import('@/pages/contest/edit.vue')

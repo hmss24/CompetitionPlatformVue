@@ -6,18 +6,34 @@ export async function apiContestAdd(conf: {
   categoryId: string | number
   title: string
   description?: string
+  scriptType?: string
+  scriptContent?: string
+  scriptCache?: string
 }) {
   const { categoryId, title, description } = conf
   if (!checkBigInt(categoryId)) throw new APIError('类型ID非法')
   if (!checkShortString(title)) throw new APIError('标题非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
+  if (conf.scriptType != null) {
+    if (!checkShortString(conf.scriptType)) throw new APIError('脚本类型非法')
+    if (conf.scriptContent != null && !checkLongString(conf.scriptContent))
+      throw new APIError('脚本内容非法')
+  } else {
+    if (conf.scriptContent != null) throw new APIError('存在脚本内容，但是却不存在脚本类型')
+  }
+  if (conf.scriptCache != null && !checkLongString(conf.scriptCache))
+    throw new APIError('脚本缓存非法')
+
   return (await request.post('/contest/add', conf, { headers: generateHeader() ?? {} })).data
     .contestId as string
 }
 
 export async function apiContestDelete(contestId: number | string) {
   if (!checkBigInt(contestId)) throw new APIError('比赛ID非法')
-  await request.delete('/contest/delete', { params: { contestId }, headers: generateHeader() ?? {} })
+  await request.delete('/contest/delete', {
+    params: { contestId },
+    headers: generateHeader() ?? {}
+  })
   return
 }
 
@@ -26,12 +42,32 @@ export async function apiContestModify(conf: {
   categoryId?: number | string
   title?: string
   description?: string
+  scriptType?: string
+  scriptContent?: string
+  scriptCache?: string
 }) {
   if (!checkBigInt(conf.contestId)) throw new APIError('比赛ID非法')
   if (conf.categoryId != null && !checkBigInt(conf.categoryId)) throw new APIError('类别ID非法')
   if (conf.title != null && !checkShortString(conf.title)) throw new APIError('标题非法')
   if (conf.description != null && !checkLongString(conf.description)) throw new APIError('描述非法')
-  if (conf.categoryId == null && conf.title == null && conf.description == null) return
+  if (conf.scriptType != null) {
+    if (!checkShortString(conf.scriptType)) throw new APIError('脚本类型非法')
+    if (conf.scriptContent != null && !checkLongString(conf.scriptContent))
+      throw new APIError('脚本内容非法')
+  } else {
+    if (conf.scriptContent != null) throw new APIError('存在脚本内容，但是却不存在脚本类型')
+  }
+  if (conf.scriptCache != null && !checkLongString(conf.scriptCache))
+    throw new APIError('脚本缓存非法')
+  if (
+    conf.categoryId == null &&
+    conf.title == null &&
+    conf.description == null &&
+    conf.scriptType == null &&
+    conf.scriptContent == null &&
+    conf.scriptCache == null
+  )
+    return
   await request.post('/contest/modify', conf, { headers: generateHeader() ?? {} })
   return
 }
@@ -45,6 +81,9 @@ export async function apiContestQuery(id: number | string) {
     categoryId: x.categoryId as string,
     title: x.title as string,
     description: x.description as string | null,
+    scriptType: x.scriptType as string | null,
+    scriptContent: x.scriptContent as string | null,
+    scriptCache: x.scriptCache as string | null,
     createdTime: dayjs(x.createdTime),
     updatedTime: dayjs(x.updatedTime)
   }
@@ -76,6 +115,11 @@ export async function apiContestList(conf: {
 
       title: x.title as string,
       description: x.description as string | null,
+
+      scriptType: x.scriptType as string | null,
+      scriptContent: x.scriptContent as string | null,
+      scriptCache: x.scriptCache as string | null,
+
       createdTime: dayjs(x.createdTime),
       updatedTime: dayjs(x.updatedTime)
     }))

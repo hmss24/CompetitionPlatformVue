@@ -23,12 +23,23 @@ router.post("/add", async (request, response) => {
   const categoryId = getBigInt(request.body.categoryId);
   const title: string = request.body.title;
   const description: string | null = request.body.description;
+  const scriptType: string | null = request.body.scriptType;
+  const scriptContent: string | null = request.body.scriptContent;
+  const scriptCache: string | null = request.body.scriptCache;
 
   if (
     categoryId == null ||
     !checkShortString(title) ||
     !checkLongString(description)
   )
+    return response.json(makeArgumentsError());
+  if (scriptType != null && !checkShortString(scriptType))
+    return response.json(makeArgumentsError());
+  if (scriptContent != null && !checkLongString(scriptContent))
+    return response.json(makeArgumentsError());
+  if (scriptContent != null && scriptType == null)
+    return response.json(makeArgumentsError());
+  if (scriptCache != null && !checkLongString(scriptCache))
     return response.json(makeArgumentsError());
 
   const userId = request.headers["userid"] as string;
@@ -48,6 +59,9 @@ router.post("/add", async (request, response) => {
       categoryId,
       title,
       description,
+      scriptType,
+      scriptContent,
+      scriptCache,
       createdTime: new Date(),
       updatedTime: new Date(),
     });
@@ -93,6 +107,9 @@ router.post("/modify", async (request, response) => {
   const categoryId = getBigInt(request.body.categoryId);
   const title: string | null = request.body.title;
   const description: string | null = request.body.description;
+  const scriptType: string | null = request.body.scriptType;
+  const scriptContent: string | null = request.body.scriptContent;
+  const scriptCache: string | null = request.body.scriptCache;
 
   if (!checkBigInt(contestId)) return response.json(makeArgumentsError());
   if (categoryId == null && request.body.categoryId != null)
@@ -100,6 +117,14 @@ router.post("/modify", async (request, response) => {
   if (title != null && !checkShortString(title))
     return response.json(makeArgumentsError());
   if (description != null && !checkLongString(description))
+    return response.json(makeArgumentsError());
+  if (scriptType != null && !checkShortString(scriptType))
+    return response.json(makeArgumentsError());
+  if (scriptContent != null && !checkLongString(scriptContent))
+    return response.json(makeArgumentsError());
+  if (scriptContent != null && scriptType == null)
+    return response.json(makeArgumentsError());
+  if (scriptCache != null && !checkLongString(scriptCache))
     return response.json(makeArgumentsError());
 
   try {
@@ -125,6 +150,11 @@ router.post("/modify", async (request, response) => {
     if (categoryId != null) svalue.set("categoryId", categoryId);
     if (title != null) svalue.set("title", title);
     if (description != null) svalue.set("description", description);
+    if (scriptType != null) {
+      svalue.set("scriptType", scriptType);
+      if (scriptContent != null) svalue.set("scriptContent", scriptContent);
+    }
+    if (scriptCache != null) svalue.set("scriptCache", scriptCache);
     svalue.set("updatedTime", new Date());
     await svalue.save();
     return response.json({
@@ -160,6 +190,10 @@ router.get("/query", async (request, response) => {
 
       title: svalue.title,
       description: svalue.description,
+
+      scriptType: svalue.scriptType,
+      scriptContent: svalue.scriptContent,
+      scriptCache: svalue.scriptCache,
 
       createdTime: svalue.createdTime,
       updatedTime: svalue.updatedTime,
@@ -285,6 +319,10 @@ router.get("/list", async (request, response) => {
 
         title: x.title,
         description: x.description,
+
+        scriptType: x.scriptType,
+        scriptContent: x.scriptContent,
+        scriptCache: x.scriptCache,
 
         createdTime: dayjs(x.createdTime).format(),
         updatedTime: dayjs(x.updatedTime).format(),

@@ -47,13 +47,18 @@
           />
         </div>
       </div>
+
       <NText style="margin-top: 16px">描述（支持Markdown格式）：</NText>
       <div id="vditor" style="margin-bottom: 16px"></div>
+
       <NSpace justify="space-between" align="center" style="margin-bottom: 16px">
         <NText style="margin-top: 16px">比赛数据：</NText>
-        <NDropdown :options="[{ label: '从文件导入', key: 'importFromFile' }]">
-          <NButton :onclick="handleAddRecord">添加比赛</NButton>
-        </NDropdown>
+        <NSpace>
+          <NButton>修改比赛数据形式</NButton>
+          <NDropdown :options="[{ label: '从文件导入', key: 'importFromFile' }]">
+            <NButton :onclick="handleAddRecord">添加比赛</NButton>
+          </NDropdown>
+        </NSpace>
       </NSpace>
       <ContestDataTableVue :contest-id="contestId" editable ref="tableRef" />
     </NSpin>
@@ -197,7 +202,8 @@ const handleAddRecord = () => {
 const handleModelSubmit = async () => {
   try {
     if (!modelForm.value.playerId) throw new APIError('请选择合法的参赛者ID')
-    if (modelForm.value.score == '' || isNaN(+modelForm.value.score)) throw new APIError('请输入合法的分数')
+    if (modelForm.value.score == '' || isNaN(+modelForm.value.score))
+      throw new APIError('请输入合法的分数')
     await apiRecordAdd({
       contestId,
       data: { playerId: modelForm.value.playerId, score: +modelForm.value.score }

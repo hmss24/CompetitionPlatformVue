@@ -119,6 +119,8 @@ export const tips = {
   RECORD_QUERY_SUCCESS: "查询记录成功",
   RECORD_LIST_SUCCESS: "列出记录成功",
   RECORD_LIST_FAILED_TOO_MANY: "列出记录失败，查询数量过多",
+  RECORD_ADD_FAILED_DUPLICATE: "添加记录失败，存在重复选手",
+  RECORD_ADD_FAILED_TOO_MANY: "添加记录失败，比赛记录过多",
 };
 
 export const QUERY_MAX_LIMIT = 5000;

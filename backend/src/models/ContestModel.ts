@@ -10,6 +10,9 @@ class ContestModel extends Model {
 
   declare title: string; // 标题
   declare description?: string; // 描述
+  declare scriptType?: string; // 脚本类型
+  declare scriptContent?: string; // 脚本内容
+  declare scriptCache?: string; // 脚本缓存
 
   declare createdTime: Date; // 创建时间
   declare updatedTime: Date; // 修改时间
@@ -38,6 +41,15 @@ ContestModel.init(
     description: {
       type: DataTypes.TEXT,
     },
+    scriptType: {
+      type: DataTypes.STRING,
+    },
+    scriptContent: {
+      type: DataTypes.TEXT,
+    },
+    scriptCache: {
+      type: DataTypes.TEXT,
+    },
     createdTime: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -48,7 +60,7 @@ ContestModel.init(
     },
   },
   {
-    tableName: "tb_context",
+    tableName: "tb_contest",
     sequelize,
   }
 );

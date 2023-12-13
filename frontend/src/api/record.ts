@@ -1,16 +1,19 @@
 import request, { APIError, generateHeader } from './request'
-import { checkBigInt } from './utils'
+import { checkBigInt, checkLongString } from './utils'
 
 export async function apiRecordAdd(conf: {
   contestId: string | number
   data:
-    | { playerId: string | number; score: number }[]
-    | { playerId: string | number; score: number }
+    | { playerId: string | number; score: number; content?: string }[]
+    | { playerId: string | number; score: number; content?: string }
 }) {
   const data = conf.data instanceof Array ? conf.data : [conf.data]
   if (!checkBigInt(conf.contestId)) throw new APIError('比赛ID非法')
-  if (!data.every((x) => checkBigInt(x.playerId) && typeof x.score == 'number'))
-    throw new APIError('记录形式错误')
+  for (const x of data) {
+    if (!checkBigInt(x.playerId) || typeof x.score != 'number') throw new APIError('记录形式错误')
+    // 兼容性修改，如果content不存在就使用score的字符串形式
+    if (x.content == null) x.content = x.score.toString()
+  }
   return (
     await request.post(
       '/record/add',
@@ -38,14 +41,16 @@ export async function apiRecordDeleteByContest(contestId: string | number) {
 
 export async function apiRecordModify(
   data:
-    | { recordId: string | number; playerId?: string | number; score?: number }[]
-    | { recordId: string | number; playerId?: string | number; score?: number }
+    | { recordId: string | number; playerId?: string | number; score?: number; content?: string }[]
+    | { recordId: string | number; playerId?: string | number; score?: number; content?: string }
 ) {
   data = data instanceof Array ? data : [data]
   if (
     !data.every(
       (x) =>
-        (x.playerId == null || checkBigInt(x.playerId)) && (x.score == null || checkBigInt(x.score))
+        (x.playerId == null || checkBigInt(x.playerId)) &&
+        (x.score == null || checkBigInt(x.score)) &&
+        (x.content == null || checkLongString(x.content))
     )
   )
     throw new APIError('记录形式错误')
@@ -61,7 +66,9 @@ export async function apiRecordQuery(recordId: (string | number)[] | string | nu
       recordId: x.recordId as string,
       contestId: x.contestId as string,
       playerId: x.playerId as string,
-      score: x.score as number
+      score: x.score as number,
+      content: x.content as string,
+      playerNickname: x.playerNickname as string
     })
   )
 }
@@ -82,7 +89,8 @@ export async function apiRecordList(conf: {
       contestId: x.contestId as string,
       playerId: x.playerId as string,
       score: x.score as number,
-      playerNickname: x.playerNickname as string
+      playerNickname: x.playerNickname as string,
+      content: x.content as string
     }))
   }
 }

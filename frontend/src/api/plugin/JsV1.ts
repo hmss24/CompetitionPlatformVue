@@ -1,5 +1,5 @@
 import Sandbox from '@nyariv/sandboxjs'
-import { asyncMapNonull, checkBigInt, checkEmptyObject, timeoutCall } from '@/api/utils'
+import { asyncMapNonull, checkEmptyObject, timeoutCall } from '@/api/utils'
 import {
   PluginError,
   type PluginInterface,
@@ -121,7 +121,7 @@ export default class PluginJsV1 implements PluginInterface {
   dataTemplate: any = 0
   dataTemplateString: string = ''
 
-  scoreCalculator: ((x: RecordDataProxy) => number) | null = null
+  scoreCalculator: (x: RecordDataProxy) => number = null as any
 
   cache: {
     dataTemplateString?: string
@@ -161,7 +161,7 @@ export default class PluginJsV1 implements PluginInterface {
 
     globals['registerScoreCalculator'] = (fn: typeof this.scoreCalculator) => {
       if (typeof fn != 'function') throw new PluginError('更新函数必须是函数类型')
-      if(this.scoreCalculator != null)throw new PluginError("不能重复设置分数计算器")
+      if (this.scoreCalculator != null) throw new PluginError('不能重复设置分数计算器')
       this.scoreCalculator = fn
     }
 
@@ -180,23 +180,20 @@ export default class PluginJsV1 implements PluginInterface {
     const sandbox = new Sandbox({ globals, prototypeWhitelist })
     const fn = sandbox.compileAsync(contestInfo.scriptContent ?? '')
     await timeoutCall(this.timeout, fn().run)
+    if (this.scoreCalculator == null) throw new PluginError('请注册分数计算器')
   }
 
   async upload(contestId: string, datas: PluginRecordData[]) {
-    if (this.scoreCalculator != null) {
-      // 分数计算
-      const modifies = await timeoutCall(this.timeout, () =>
-        asyncMapNonull(datas, async (x) => {
-          const _x = proxyRecordData(x)
-          const score = this.scoreCalculator!(_x)
-          if (typeof score != 'number') throw new PluginError('分数计算器应当返回数字类型')
-          if (score !== x.score) return { recordId: x.recordId, score }
-          else return undefined
-        })
-      )
-      console.log(modifies)
-      if (modifies.length != 0) await apiRecordModify(modifies)
-    }
+    // 分数计算
+    const modifies = await asyncMapNonull(datas, async (x) => {
+      const _x = proxyRecordData(x)
+      const score = await this.getScore(_x.content)
+      if (typeof score != 'number') throw new PluginError('分数计算器应当返回数字类型')
+      if (score !== x.score) return { recordId: x.recordId, score }
+      else return undefined
+    })
+    console.log(modifies)
+    if (modifies.length != 0) await apiRecordModify(modifies)
     await apiContestModify({
       contestId,
       scriptType: 'JsV1',
@@ -207,13 +204,11 @@ export default class PluginJsV1 implements PluginInterface {
   }
 
   process(x: any) {
-    if (this.dataTemplateString == this.cache.dataTemplateString) return x
-    else return standardizingDataForm(x, this.dataTemplate)
+    return standardizingDataForm(x, this.dataTemplate)
   }
 
-  async getScore(x: PluginRecordData) {
-    if(this.scoreCalculator == null) return x.score;
-    return await timeoutCall(this.timeout, ()=> this.scoreCalculator!(x))
+  async getScore(content: any) {
+    return await timeoutCall(this.timeout, () => this.scoreCalculator(content))
   }
 
   async makeData(x: PluginRecordData) {

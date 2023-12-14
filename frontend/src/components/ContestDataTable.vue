@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="tsx">
-import { apiRecordDelete, apiRecordList, apiRecordModify } from '@/api/record'
+import { apiRecordAdd, apiRecordDelete, apiRecordList, apiRecordModify } from '@/api/record'
 import { asyncMap } from '@/api/utils'
 import {
   NSpin,
@@ -176,14 +176,13 @@ let modalOldValue = ''
 const handleModelSubmit = async () => {
   if (modalValue.value != modalOldValue) {
     try {
-      const obj = JSON.parse(modalValue.value)
-      const ins_obj = plugin.process != null ? plugin.process(obj) : obj
-      modalRecord.content = ins_obj
+      const content = JSON.parse(modalValue.value)
+      const ins_content = plugin.process != null ? plugin.process(content) : content
       try {
         await apiRecordModify({
           recordId: modalRecord.recordId,
-          content: JSON.stringify(ins_obj),
-          score: await plugin.getScore(modalRecord)
+          content: JSON.stringify(ins_content),
+          score: await plugin.getScore(ins_content)
         })
         await plugin.upload(remoteContestInfo.contestId, [modalRecord])
       } catch (e) {
@@ -287,9 +286,37 @@ const refreshAll = async () => {
   }
 }
 
+const add = async (playerId: string, content: string) => {
+  let newContent = await plugin.process(content)
+  let score = await plugin.getScore(newContent)
+  await apiRecordAdd({
+    contestId: props.contestId,
+    data: { playerId, score, content: JSON.stringify(newContent) }
+  })
+  refreshAll()
+}
+
+const addMulti = async (datas: { playerId: string; content: string }[]) => {
+  await apiRecordAdd({
+    contestId: props.contestId,
+    data: await asyncMap(datas, async (x) => {
+      let newContent = await plugin.process(x.content)
+      let score = await plugin.getScore(newContent)
+      return { playerId: x.playerId, score, content: JSON.stringify(newContent) }
+    })
+  })
+  refreshAll()
+}
+
+/// 导出函数
+
 defineExpose({
   /** 刷新表格 */
-  refresh: refreshAll
+  refresh: refreshAll,
+  /** 添加数据（这将刷新表格） */
+  add,
+  /** 批量添加数据（这将刷新表格） */
+  addMulti
 })
 
 onMounted(async () => {

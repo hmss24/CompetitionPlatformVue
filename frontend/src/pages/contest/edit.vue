@@ -54,7 +54,7 @@
       <NSpace justify="space-between" align="center" style="margin-bottom: 16px">
         <NText style="margin-top: 16px">比赛数据：</NText>
         <NSpace>
-          <NButton>修改比赛数据形式</NButton>
+          <NButton :on-click="handleScriptModify">修改比赛数据形式</NButton>
           <NDropdown :options="[{ label: '从文件导入', key: 'importFromFile' }]">
             <NButton :onclick="handleAddRecord">添加比赛</NButton>
           </NDropdown>
@@ -80,8 +80,8 @@
           <NFormItem label="选手" path="playerId">
             <UserInput v-model:user-id="modelForm.playerId" />
           </NFormItem>
-          <NFormItem label="分数" path="score">
-            <NInput :allow-input="(x) => !x || !isNaN(+x)" v-model:value="modelForm.score" />
+          <NFormItem label="内容" path="content">
+            <NInput v-model:value="modelForm.content" />
           </NFormItem>
         </NForm>
         <NSpace justify="end">
@@ -95,7 +95,6 @@
 
 <script setup lang="ts">
 import { apiContestDelete, apiContestModify, apiContestQuery } from '@/api/contest'
-import { apiRecordAdd } from '@/api/record'
 import { APIError, getAPIErrorInfo } from '@/api/request'
 import CategoryInput from '@/components/CategoryInput.vue'
 import ContestDataTableVue from '@/components/ContestDataTable.vue'
@@ -192,9 +191,9 @@ const tableRef = ref<VNodeRef | null>(null)
 const shouldShowModal = ref(false)
 const addRecordColumns: FormRules = {
   playerId: { required: true, message: '请选择用户', trigger: 'blur' },
-  score: { required: true }
+  content: { required: true }
 }
-const modelForm = ref({ playerId: '', score: '' })
+const modelForm = ref({ playerId: '', content: '' })
 const handleAddRecord = () => {
   console.log(tableRef.value)
   shouldShowModal.value = true
@@ -202,12 +201,7 @@ const handleAddRecord = () => {
 const handleModelSubmit = async () => {
   try {
     if (!modelForm.value.playerId) throw new APIError('请选择合法的参赛者ID')
-    if (modelForm.value.score == '' || isNaN(+modelForm.value.score))
-      throw new APIError('请输入合法的分数')
-    await apiRecordAdd({
-      contestId,
-      data: { playerId: modelForm.value.playerId, score: +modelForm.value.score }
-    })
+    await tableRef.value?.add(modelForm.value.playerId, modelForm.value.content)
     $message.success('添加记录成功')
     tableRef.value?.refresh()
     shouldShowModal.value = false
@@ -215,10 +209,13 @@ const handleModelSubmit = async () => {
     $message.error(getAPIErrorInfo(e))
   }
 }
-
 const handleModelCancel = () => {
   shouldShowModal.value = false
-  modelForm.value = { playerId: '', score: '' }
+  modelForm.value = { playerId: '', content: '' }
+}
+
+const handleScriptModify = ()=> {
+  $router.push(`/contest/form_edit/${contestId}`)
 }
 
 onMounted(async () => {

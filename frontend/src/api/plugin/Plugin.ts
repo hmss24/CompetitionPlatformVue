@@ -28,8 +28,8 @@ export interface PluginInterface {
   load: (contestInfo: ContestInfo, categoryInfo: CategoryInfo) => Promise<void>
   upload: (contestId: string, datas: PluginRecordData[]) => Promise<void>
 
-  process?: (oldContent: any) => any
-  getScore: (x: PluginRecordData)=> Promise<number>
+  process: (oldContent: any) => Promise<any>
+  getScore: (content: any) => Promise<number>
 
   makeData: (x: PluginRecordData) => Promise<string[]>
   makeSort: (idx: number, datas: PluginRecordData[]) => Promise<number[]>
@@ -42,7 +42,8 @@ export class EmptyPlugin implements PluginInterface {
   load = () => Promise.resolve()
   upload = () => Promise.resolve()
 
-  getScore = (x: PluginRecordData)=> Promise.resolve(x.score)
+  process = (x: PluginRecordData) => Promise.resolve(x)
+  getScore = () => Promise.resolve(0)
 
   makeData = () => Promise.resolve([])
   makeSort = () => Promise.resolve([])

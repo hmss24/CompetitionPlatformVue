@@ -14,13 +14,10 @@ declareDataForm([{ problem: 'A', submits: [{ time: 0, state: 'Accepted' }] }])
  */
 
 // 定义分数计算器
-registerScoreCalculator('20231213', (x) => {
-  /** @type {MyContent} 原数据 */
-  const content = x.content
-
+registerScoreCalculator((x) => {
   let penalty = 0; // 总罚时
   let accepted = 0; // 总过题数
-  for(let problem of content) {
+  for(let problem of x) {
     let _penalty = 0; // 当前题目罚时
     let _accepted = false; // 当前题是否通过
     for(let sumbit of problem.submits) {

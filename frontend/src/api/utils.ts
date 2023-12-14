@@ -82,12 +82,12 @@ export class TimeCallExceedError extends Error {
  * @param args 函数参数
  * @returns 包裹原函数返回值的Promise
  */
-export async function timeoutCall(
+export async function timeoutCall<ReturnT>(
   timeout: number,
-  fn: (...args: any) => any,
+  fn: (...args: any) => ReturnT,
   thisArg: any = undefined,
   ...args: any
-): Promise<ReturnType<typeof fn>> {
+): Promise<ReturnT> {
   return new Promise((resolve, reject) => {
     setTimeout(() => reject(new TimeCallExceedError()), timeout)
     try {
@@ -97,4 +97,35 @@ export async function timeoutCall(
       reject(e)
     }
   })
+}
+
+export async function asyncMap<ValueT, ReturnT>(
+  array: Iterable<ValueT>,
+  fn: (value: ValueT) => Promise<ReturnT>
+): Promise<ReturnT[]> {
+  const ret: ReturnT[] = []
+  for (const x of array) ret.push(await fn(x))
+  return ret
+}
+export async function asyncMapNonull<ValueT, ReturnT>(
+  array: Iterable<ValueT>,
+  fn: (value: ValueT) => Promise<ReturnT>
+): Promise<NonNullable<ReturnT>[]> {
+  const ret: NonNullable<ReturnT>[] = []
+  for (const x of array) {
+    const fn_ret = await fn(x)
+    if (fn_ret != null) ret.push(fn_ret)
+  }
+  return ret
+}
+export function mapNonull<ValueT, ReturnT>(
+  array: Iterable<ValueT>,
+  fn: (value: ValueT) => ReturnT
+): NonNullable<ReturnT>[] {
+  const ret: NonNullable<ReturnT>[] = []
+  for (const x of array) {
+    const fn_ret = fn(x)
+    if (fn_ret != null) ret.push(fn_ret)
+  }
+  return ret
 }

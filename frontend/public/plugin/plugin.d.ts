@@ -12,7 +12,7 @@ interface RecordData {
   /**
    * 选手ID（每场比赛不重复）
    */
-  playerId: string;
+  readonly playerId: string;
   /**
    * 选手昵称
    */
@@ -20,7 +20,7 @@ interface RecordData {
   /**
    * 量化分数
    */
-  score: number;
+  readonly score: number;
   /**
    * 数据内容
    */
@@ -34,7 +34,7 @@ interface TableColumnConfig {
   /*
    * 表头名称。（需要保证唯一）
    */
-  lebel: string;
+  label: string;
   /**
    * 获取器
    * @param x 原数据
@@ -65,7 +65,7 @@ interface TableColumnConfig {
    * @param data 输入数据
    * @returns 符合CSS的颜色字符串（如十六进制RGB格式、颜色名称等）
    */
-  color?: (data: RecordData)=> string;
+  // color?: (data: RecordData)=> string;
 
   /**
    * 筛选功能。
@@ -75,7 +75,7 @@ interface TableColumnConfig {
    *   - 值为false等效于不设置，即不启用筛选功能
    * - 若此项设置为函数，传入数据后返回表示筛选项的字符串，相同的返回值视在同一个集合中。
    */
-  filter?: boolean | ((data: RecordData)=> string);
+  // filter?: boolean | ((data: RecordData)=> string);
 
   /**
    * 设置器。
@@ -86,8 +86,10 @@ interface TableColumnConfig {
    * 
    * @param data 原数据
    * @param value 用户输入的内容
+   * 
+   * @returns 是否接受设置
    */
-  setter: (data: RecordData, value: string)=> void;
+  // setter: (data: RecordData, value: string)=> boolean;
 }
 
 /**
@@ -104,10 +106,9 @@ declare function registerTableColumn(config: TableColumnConfig): boolean;
 /**
  * 注册分数计算器。
  * 
- * @param ver 版本标识（当服务端保存版本不同时，执行分数更新操作）
  * @param fn 更新函数，传入表格数据后返回供评估的分数。
  */
-declare function registerScoreCalculator(ver: string, fn: (data: RecordData)=> number): void;
+declare function registerScoreCalculator(fn: (data: RecordData)=> number): void;
 
 /**
  * 声明表格形式。

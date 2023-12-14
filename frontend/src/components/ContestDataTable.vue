@@ -1,261 +1,301 @@
 <template>
-  <NDataTable
-    remote
-    :columns="columns"
-    :data="data"
-    :loading="loadingState"
-    :pagination="paginationReactive"
-    @update:page="handlePageChange"
-    @update:sorter="handleSorterChange"
-    @update:page-size="handlePageSizeChange"
-  />
+  <NSpin :show="loadingState">
+    <NDataTable
+      :data="dataTable"
+      :columns="tableColumns"
+      @update:sorter="handleSorterUpdated"
+      :row-props="rowProps"
+    />
+    <NDropdown
+      v-if="editable"
+      :x="dropdownX"
+      :y="dropdownY"
+      trigger="manual"
+      placement="bottom-start"
+      :options="dropdownOptions"
+      :show="dropdownShow"
+      :on-clickoutside="dropdownHandleClickOutside"
+      @select="dropdownHandleSelect"
+    />
+    <template #description>
+      <div v-text="loadingText"></div>
+    </template>
+
+    <NModal
+      v-model:show="shouldShowModal"
+      :auto-focus="false"
+      :mask-closable="false"
+      v-if="editable"
+    >
+      <NCard
+        title="修改比赛数据"
+        style="max-width: 60%; max-height: 80%"
+        :bordered="false"
+        preset="card"
+        role="dialog"
+      >
+        <NSpace vertical>
+          <NInput type="textarea" v-model:value="modalValue" />
+          <NSpace justify="end">
+            <NButton round type="primary" @click="handleModelSubmit">确认</NButton>
+            <NButton round @click="handleModelCancel">取消</NButton>
+          </NSpace>
+        </NSpace>
+      </NCard>
+    </NModal>
+  </NSpin>
 </template>
 
 <script setup lang="tsx">
 import { apiRecordDelete, apiRecordList, apiRecordModify } from '@/api/record'
-import { APIError, getAPIErrorInfo } from '@/api/request'
-import { checkBigInt } from '@/api/utils'
-import UserInput from '@/components/UserInput.vue'
+import { asyncMap } from '@/api/utils'
 import {
-  NDataTable,
-  NInput,
+  NSpin,
   useMessage,
-  type DataTableSortState,
-  type PaginationProps
+  NDataTable,
+  NDropdown,
+  NModal,
+  NCard,
+  NSpace,
+  NButton,
+  NInput
 } from 'naive-ui'
-import { type SortOrder, type TableColumn } from 'naive-ui/es/data-table/src/interface'
-import { defineComponent, nextTick, onMounted, reactive, ref, type VNodeRef } from 'vue'
+import { type TableColumn } from 'naive-ui/es/data-table/src/interface'
+import { onMounted, ref, nextTick } from 'vue'
+import { apiCategoryQuery } from '@/api/category'
+import { apiContestQuery } from '@/api/contest'
+import {
+  EmptyPlugin,
+  getPluginError,
+  type PluginInterface,
+  type PluginRecordData,
+  getSortedArray
+} from '@/api/plugin/Plugin'
+import PluginJsV1 from '@/api/plugin/JsV1'
 import UserTag from './UserTag.vue'
+
+const $message = useMessage()
 
 const props = defineProps<{
   editable?: boolean
   contestId: string | number
 }>()
-const editable = props.editable ?? false
-const data = ref<Awaited<ReturnType<typeof apiRecordList>>['data']>([]);
 
+/// 控制加载部分
+const loadingState = ref(true)
+const loadingText = ref('正在从远端拉取数据')
 
+/// 表格列属性
+const tableColumns = ref<any[]>([
+  {
+    title: '选手名称',
+    key: 'playerNickname',
+    sorter: true,
+    resizable: true,
+    render: (x: any) => <UserTag nickname={x.playerNickname} userId={x.playerId} />
+  },
+  { title: '量化分数', key: 'score', sorter: true, resizable: true }
+])
 
-const $message = useMessage()
-let order: ReturnType<typeof makeOrder> = undefined
-const makeOrder = (key: string, order: SortOrder) => {
-  switch (order) {
-    case 'ascend':
-      return '+' + key
-    case 'descend':
-      return '-' + key
-    default:
-      return undefined
+/// 本地数据部分
+let plugin: PluginInterface = null as any
+const dataTable = ref<any[]>()
+
+const handleSorterUpdated = async (sorter: any) => {
+  if (sorter != null) {
+    loadingState.value = true
+    loadingText.value = '加载排序中'
+
+    const key: string = sorter.columnKey
+    const order: 'ascend' | 'descend' | false = sorter.order
+    try {
+      if (order == false) {
+        dataTable.value?.sort((a, b) => a._id - b._id)
+      } else if (key == 'playerNickname') {
+        if (order == 'ascend')
+          dataTable.value?.sort((a, b) =>
+            (a.playerNickname as string).localeCompare(b.playerNickname)
+          )
+        else
+          dataTable.value?.sort(
+            (a, b) => -(a.playerNickname as string).localeCompare(b.playerNickname)
+          )
+      } else if (key == 'score') {
+        if (order == 'ascend') dataTable.value?.sort((a, b) => a.score - b.score)
+        else dataTable.value?.sort((a, b) => -(a.score - b.score))
+      } else {
+        dataTable.value!.sort((a, b) => a._id - b._id)
+        dataTable.value = getSortedArray(
+          dataTable.value!,
+          await plugin.makeSort(parseInt(key), remoteData),
+          order == 'descend'
+        )
+      }
+      loadingState.value = false
+    } catch (e) {
+      $message.error(getPluginError(e))
+    }
   }
 }
-const doRefresh = async (page?: number, pageSize?: number, newColumns?: any) => {
+
+/// 菜单部分
+const dropdownX = ref(0)
+const dropdownY = ref(0)
+let dropdownRow: { _id: number } = null as any
+const dropdownOptions = [
+  { label: '编辑', key: 'edit' },
+  { label: () => <span style="color: red;">删除</span>, key: 'delete' }
+]
+const dropdownShow = ref(false)
+const dropdownHandleSelect = async (key: string) => {
+  dropdownShow.value = false
+  const record = remoteData[dropdownRow._id]
   try {
-    if (page == undefined) page = paginationReactive.page as number
-    if (pageSize == undefined) pageSize = paginationReactive.pageSize as number
-    const ret = await apiRecordList({
-      contestId: props.contestId,
-      limit: pageSize,
-      offset: page * pageSize,
-      order
-    })
-    data.value = ret.data
-    paginationReactive.page = page
-    paginationReactive.pageSize = pageSize
-    paginationReactive.itemCount = Math.ceil(ret.count / pageSize)
-    if (newColumns != null) columns.value = newColumns
+    switch (key) {
+      case 'edit':
+        shouldShowModal.value = true
+        modalValue.value = modalOldValue = JSON.stringify(remoteData[dropdownRow._id].content)
+        modalRecord = record
+        break
+      case 'delete':
+        await apiRecordDelete(record.recordId)
+        await refreshAll()
+        break
+    }
+  } catch (e) {
+    $message.error(getPluginError(e))
+  }
+}
+const dropdownHandleClickOutside = () => {
+  dropdownShow.value = false
+}
+const shouldShowModal = ref(false)
+const modalValue = ref('')
+let modalRecord: PluginRecordData = null as any
+let modalOldValue = ''
+const handleModelSubmit = async () => {
+  if (modalValue.value != modalOldValue) {
+    try {
+      const obj = JSON.parse(modalValue.value)
+      const ins_obj = plugin.process != null ? plugin.process(obj) : obj
+      modalRecord.content = ins_obj
+      try {
+        await apiRecordModify({
+          recordId: modalRecord.recordId,
+          content: JSON.stringify(ins_obj),
+          score: await plugin.getScore(modalRecord)
+        })
+        await plugin.upload(remoteContestInfo.contestId, [modalRecord])
+      } catch (e) {
+        $message.error(getPluginError(e))
+      }
+    } catch (e) {
+      $message.error('输入内容并非合法JSON')
+    }
+    await refreshAll()
+  }
+  shouldShowModal.value = false
+}
+const handleModelCancel = () => {
+  shouldShowModal.value = false
+}
+const rowProps = (row: PluginRecordData) => {
+  return {
+    onContextmenu: props.editable
+      ? (e: MouseEvent) => {
+          e.preventDefault()
+          dropdownShow.value = false
+          nextTick().then(() => {
+            dropdownShow.value = true
+            dropdownX.value = e.clientX
+            dropdownY.value = e.clientY
+            dropdownRow = row as any
+          })
+        }
+      : () => {
+          dropdownShow.value = false
+        }
+  }
+}
+
+/// 远端数据部分
+let remoteContestInfo: Awaited<ReturnType<typeof apiContestQuery>> = null as any
+let remoteCategoryInfo: Awaited<ReturnType<typeof apiCategoryQuery>> = null as any
+let remoteData: PluginRecordData[] = []
+
+class TableError extends Error {
+  constructor(msg: string) {
+    super(msg)
+  }
+}
+
+const _refreshAll = async () => {
+  loadingText.value = '正在从远端拉取数据'
+  remoteContestInfo = await apiContestQuery(props.contestId)
+  remoteCategoryInfo = await apiCategoryQuery(remoteContestInfo.categoryId)
+  remoteData = (await apiRecordList({ contestId: props.contestId })).data
+
+  loadingText.value = '正在加载插件'
+  switch (remoteContestInfo.scriptType) {
+    case null:
+    case '':
+      plugin = new EmptyPlugin()
+      break
+    case 'JsV1':
+      plugin = new PluginJsV1()
+      break
+    default:
+      throw new TableError('未知插件类型')
+  }
+  plugin.load(remoteContestInfo, remoteCategoryInfo)
+  if (plugin.process) for (let x of remoteData) x.content = plugin.process(JSON.parse(x.content))
+  else for (let x of remoteData) x.content = JSON.parse(x.content)
+
+  tableColumns.value.splice(
+    2,
+    Infinity,
+    ...plugin.tableColumn.map(
+      (x, idx): TableColumn => ({
+        title: x.label,
+        key: idx.toString(),
+        sorter: x.sorter != null,
+        resizable: true
+      })
+    )
+  )
+
+  loadingText.value = '正在加载自定义数据'
+  const localeCustomData = await asyncMap(remoteData, (x) => plugin.makeData(x))
+  dataTable.value = remoteData.map((x, i) => {
+    const entry: any = {
+      playerNickname: x.playerNickname,
+      playerId: x.playerId,
+      score: x.score,
+      _id: i
+    }
+    localeCustomData[i].forEach((x, idx) => (entry[idx] = x))
+    return entry
+  })
+}
+const refreshAll = async () => {
+  loadingState.value = true
+  try {
+    await _refreshAll()
     loadingState.value = false
   } catch (e) {
-    $message.error(getAPIErrorInfo(e))
+    $message.error(getPluginError(e))
   }
 }
 
 defineExpose({
-  refresh: () => doRefresh()
+  /** 刷新表格 */
+  refresh: refreshAll
 })
 
-const loadingState = ref(true)
-onMounted(() => doRefresh())
-
-const columnPlayerNickName: TableColumn = {
-  title: '选手名称',
-  key: 'playerNickname',
-  sorter: true,
-  sortOrder: false,
-  resizable: true,
-  render: editable
-    ? (rowData) => {
-        const Componet = defineComponent({
-          setup() {
-            const isEdit = ref(false)
-            const hold = ref<(typeof data.value)[0]>(rowData as any)
-            const inputRef = ref<VNodeRef | null>(null)
-            const inputValue = ref(rowData.playerId as string)
-            const handleOnClick = () => {
-              isEdit.value = true
-              nextTick(() => inputRef.value?.focusInput())
-            }
-            const handleChange = async () => {
-              const playerId = inputValue.value
-              TRY_MODIFY: try {
-                if (!checkBigInt(playerId)) {
-                  inputValue.value = hold.value.playerId.toString()
-                  break TRY_MODIFY
-                }
-                if (playerId == hold.value.playerId) break TRY_MODIFY
-                loadingState.value = true
-                await apiRecordModify({ recordId: hold.value.recordId, playerId })
-                hold.value.playerId = playerId
-                loadingState.value = false
-              } catch (e) {
-                $message.error(getAPIErrorInfo(e))
-                inputValue.value = hold.value.playerId.toString()
-              }
-              isEdit.value = false
-            }
-            return () => (
-              <div style="min-height: 22px" onClick={handleOnClick}>
-                {isEdit.value ? (
-                  <UserInput
-                    selectRef={inputRef}
-                    userId={inputValue.value}
-                    onUpdate:userId={(x: any) => (inputValue.value = x)}
-                    onBlur={handleChange}
-                  />
-                ) : (
-                  <UserTag userId={hold.value.playerId} nickname={hold.value.playerNickname} />
-                )}
-              </div>
-            )
-          }
-        })
-        return <Componet />
-      }
-    : (rowData) => (
-        <UserTag userId={rowData.playerId as any} nickname={rowData.playerNickname as any} />
-      )
-}
-const columnScore: TableColumn = {
-  title: '成绩',
-  key: 'score',
-  sorter: true,
-  sortOrder: false,
-  resizable: true,
-  render: editable
-    ? (rowData) => {
-        const Componet = defineComponent({
-          setup() {
-            const isEdit = ref(false)
-            const hold = ref<(typeof data.value)[0]>(rowData as any)
-            const inputRef = ref<VNodeRef | null>(null)
-            const inputValue = ref(rowData.score as string)
-            const handleOnClick = () => {
-              isEdit.value = true
-              nextTick(() => inputRef.value?.focus())
-            }
-            const handleChange = async () => {
-              try {
-                if (inputValue.value == '') {
-                  loadingState.value = true
-                  await apiRecordDelete(hold.value.recordId)
-                  doRefresh()
-                } else {
-                  const score = +inputValue.value
-                  if (isNaN(score)) throw new APIError('请输入合法值')
-                  if (score != hold.value.score) {
-                    loadingState.value = true
-                    await apiRecordModify({ recordId: hold.value.recordId, score })
-                    hold.value.score = score
-                    loadingState.value = false
-                  }
-                }
-              } catch (e) {
-                $message.error(getAPIErrorInfo(e))
-                inputValue.value = hold.value.score.toString()
-              }
-              isEdit.value = false
-              loadingState.value = false
-            }
-            return () => (
-              <div style="min-height: 22px" onClick={handleOnClick}>
-                {isEdit.value ? (
-                  <NInput
-                    ref={inputRef}
-                    value={inputValue.value.toString()}
-                    onUpdateValue={(x) => {
-                      if (x == '' || !isNaN(+x)) inputValue.value = x
-                    }}
-                    placeholder="留空以删除记录"
-                    onChange={handleChange}
-                    onBlur={handleChange}
-                  />
-                ) : (
-                  hold.value.score
-                )}
-              </div>
-            )
-          }
-        })
-        return <Componet />
-      }
-    : undefined
-}
-const columns = ref([columnPlayerNickName, columnScore])
-
-const paginationReactive = reactive<PaginationProps>({
-  page: 1,
-  pageCount: 1,
-  pageSize: 10,
-  showSizePicker: true,
-  showQuickJumper: true,
-  pageSizes: [
-    {
-      label: '10 条 / 页',
-      value: 10
-    },
-    {
-      label: '20 条 / 页',
-      value: 20
-    },
-    {
-      label: '50 条 / 页',
-      value: 50
-    },
-    {
-      label: '100 条 / 页',
-      value: 100
-    }
-  ],
-  prefix({ itemCount }) {
-    return `共 ${itemCount} 条`
-  }
+onMounted(async () => {
+  await refreshAll()
+  loadingState.value = false
 })
-const handlePageChange = async (currentPage: number) => {
-  if (!loadingState.value) {
-    loadingState.value = true
-    await doRefresh(currentPage)
-  }
-}
-const handlePageSizeChange = async (pageSize: number) => {
-  if (!loadingState.value) {
-    loadingState.value = true
-    await doRefresh(0, pageSize)
-  }
-}
 
-const handleSorterChange = async (sorter: DataTableSortState | null) => {
-  if (sorter != null) {
-    loadingState.value = true
-    order = makeOrder(sorter.columnKey as string, sorter.order)
-    await doRefresh(
-      undefined,
-      undefined,
-      columns.value.map((x) => {
-        const col = Object.assign({}, x)
-        if (col.key == sorter.columnKey) col.sortOrder = sorter.order
-        else col.sortOrder = false
-        return col
-      })
-    )
-  }
-}
+///
 </script>

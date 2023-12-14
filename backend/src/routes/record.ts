@@ -65,12 +65,12 @@ router.post("/add", async (request, response) => {
     // 检查是否重复添加选手
     {
       const svalue = [];
-      for (let x of data)
-        svalue.push(
-          await RecordModel.findAll({
-            where: { contestId, playerId: x.playerId },
-          })
-        );
+      for (let x of data) {
+        const s = await RecordModel.findOne({
+          where: { contestId, playerId: x.playerId },
+        });
+        if (s != null) svalue.push(s);
+      }
       if (svalue.length != 0)
         return response.json({
           code: errorcode.RECORD_ADD_ERROR,

@@ -1,5 +1,5 @@
 
-/// <reference lib="quickjs"/>
+/// <reference lib="lib"/>
 
 /**
  * 记录数据

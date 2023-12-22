@@ -55,8 +55,8 @@ onMounted(async () => {
 
   try {
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      await (await window.fetch('/plugin/quickjs.d.ts')).text(),
-      'quickjs.d.ts'
+      await (await window.fetch('/plugin/lib.d.ts')).text(),
+      'lib.d.ts'
     )
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       await (await window.fetch('/plugin/plugin.d.ts')).text(),
@@ -65,8 +65,6 @@ onMounted(async () => {
   } catch (e: any) {
     // do nothing
   }
-
-  //monaco.editor.createModel(_quickjs_dts, 'typescript', monaco.Uri.parse("file:///quickjs.d.ts"))
 
   monacoEditor = monaco.editor.create(monacoRef.value, { automaticLayout: true })
 

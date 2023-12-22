@@ -203,7 +203,7 @@ const handleModelSubmit = async () => {
     if (!modelForm.value.playerId) throw new APIError('请选择合法的参赛者ID')
     await tableRef.value?.add(modelForm.value.playerId, modelForm.value.content)
     $message.success('添加记录成功')
-    tableRef.value?.refresh()
+    await tableRef.value?.refresh()
     shouldShowModal.value = false
   } catch (e) {
     $message.error(getAPIErrorInfo(e))

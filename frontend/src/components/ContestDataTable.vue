@@ -228,13 +228,15 @@ class TableError extends Error {
   }
 }
 
-const _refreshAll = async () => {
+const _refreshAll = async (conf?: { scriptType?: string; scriptContent?: string }) => {
   loadingText.value = '正在从远端拉取数据'
   remoteContestInfo = await apiContestQuery(props.contestId)
   remoteCategoryInfo = await apiCategoryQuery(remoteContestInfo.categoryId)
   remoteData = (await apiRecordList({ contestId: props.contestId })).data
 
   loadingText.value = '正在加载插件'
+  if (conf?.scriptType != null) remoteContestInfo.scriptType = conf.scriptType
+  if (conf?.scriptContent != null) remoteContestInfo.scriptContent = conf.scriptContent
   switch (remoteContestInfo.scriptType) {
     case null:
     case '':
@@ -246,7 +248,7 @@ const _refreshAll = async () => {
     default:
       throw new TableError('未知插件类型')
   }
-  plugin.load(remoteContestInfo, remoteCategoryInfo)
+  await plugin.load(remoteContestInfo, remoteCategoryInfo)
   if (plugin.process) for (let x of remoteData) x.content = plugin.process(JSON.parse(x.content))
   else for (let x of remoteData) x.content = JSON.parse(x.content)
 
@@ -276,14 +278,10 @@ const _refreshAll = async () => {
     return entry
   })
 }
-const refreshAll = async () => {
+const refreshAll = async (conf?: { scriptType?: string; scriptContent?: string }) => {
   loadingState.value = true
-  try {
-    await _refreshAll()
-    loadingState.value = false
-  } catch (e) {
-    $message.error(getPluginError(e))
-  }
+  await _refreshAll(conf)
+  loadingState.value = false
 }
 
 const add = async (playerId: string, content: string) => {

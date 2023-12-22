@@ -4,6 +4,7 @@ import UserModel from "@/models/UserModel";
 import { QUERY_MAX_LIMIT, errorcode, tips } from "@/utils/conf";
 import {
   checkBigInt,
+  checkLongString,
   checkPermission,
   getBigInt,
   getOrder,
@@ -28,37 +29,87 @@ router.post("/add", async (request, response) => {
     });
 
   const userId = request.headers["userid"];
-  const _data: { playerId: string | number; score: number }[] =
+  const _data: { playerId: string | number; score: number; content: string }[] =
     request.body.data;
   const data = _data instanceof Array ? _data : [_data];
-  if (!data.every((x) => checkBigInt(x.playerId) && typeof x.score == "number"))
+  if (
+    !data.every(
+      (x) =>
+        checkBigInt(x.playerId) &&
+        typeof x.score == "number" &&
+        checkLongString(x.content)
+    )
+  )
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
     });
 
   try {
-    const svalue = await ContestModel.findOne({ where: { contestId } });
-    if (svalue == null)
+    // 检查比赛ID是否合法，用户是否具有对它的权限
+    {
+      const svalue = await ContestModel.findOne({ where: { contestId } });
+      if (svalue == null)
+        return response.json({
+          code: errorcode.NONEXISTING,
+          msg: tips.NONEXISTING,
+        });
+      if (!checkPermission(userId, svalue.userId))
+        return response.json({
+          code: errorcode.NO_PERMISSION,
+          msg: tips.NO_PERMISSION,
+        });
+    }
+
+    const ids = new Array<string>();
+    // 检查是否重复添加选手
+    {
+      const svalue = [];
+      for (let x of data) {
+        const s = await RecordModel.findOne({
+          where: { contestId, playerId: x.playerId },
+        });
+        if (s != null) svalue.push(s);
+      }
+      if (svalue.length != 0)
+        return response.json({
+          code: errorcode.RECORD_ADD_ERROR,
+          msg: tips.RECORD_ADD_FAILED_DUPLICATE,
+        });
+      const set = new Set<string>();
+      for (let { playerId } of data) {
+        const x = playerId.toString();
+        if (set.has(x))
+          return response.json({
+            code: errorcode.RECORD_ADD_ERROR,
+            msg: tips.RECORD_ADD_FAILED_DUPLICATE,
+          });
+        set.add(x);
+      }
+    }
+
+    if (
+      (await RecordModel.count({ where: { contestId } })) + data.length >
+      QUERY_MAX_LIMIT
+    ) {
       return response.json({
-        code: errorcode.NONEXISTING,
-        msg: tips.NONEXISTING,
+        code: errorcode.RECORD_ADD_ERROR,
+        msg: tips.RECORD_LIST_FAILED_TOO_MANY,
       });
-    if (!checkPermission(userId, svalue.userId))
-      return response.json({
-        code: errorcode.NO_PERMISSION,
-        msg: tips.NO_PERMISSION,
-      });
-    const ids = await data.map(
-      async (x) =>
+    }
+
+    for (let x of data) {
+      ids.push(
         (
           await RecordModel.create({
             contestId,
             playerId: x.playerId,
             score: x.score,
+            content: x.content,
           })
         ).recordId
-    );
+      );
+    }
     return response.json({
       code: errorcode.SUCCESS,
       msg: tips.RECORD_ADD_SUCCESS,
@@ -125,31 +176,40 @@ router.delete("/delete_by_contest", async (request, response) => {
 router.post("/modify", async (request, response) => {
   const _data: any = request.body.data;
   const data: {
-    recordId?: string | number;
+    recordId: string | number;
     playerId?: string | number;
-    score: number;
+    score?: number;
+    content?: string;
   }[] = _data instanceof Array ? _data : [_data];
+
+  // 检查格式是否合法
   if (
     !data.every(
       (x) =>
         x != null &&
         checkBigInt(x.recordId) &&
         (x.playerId == null || checkBigInt(x.playerId)) &&
-        (x.score == null || typeof x.score == "number")
+        (x.score == null || typeof x.score == "number") &&
+        (x.content == null || checkLongString(x.content))
     )
   )
     return response.json({
       code: errorcode.BAD_ARGUMENTS,
       msg: tips.BAD_ARGUMENTS,
     });
-  const dataMap = new Map<string, [string | number | null, number | null]>();
-  for (let { recordId, playerId, score } of data) {
+
+  // 检查是否存在重复项
+  const dataMap = new Map<
+    string,
+    [string | number | null, number | null, string | null]
+  >();
+  for (let { recordId, playerId, score, content } of data) {
     if (dataMap.has(recordId.toString()))
       return response.json({
         code: errorcode.BAD_ARGUMENTS,
         msg: tips.BAD_ARGUMENTS,
       });
-    dataMap.set(recordId.toString(), [playerId, score]);
+    dataMap.set(recordId.toString(), [playerId, score, content]);
   }
 
   try {
@@ -157,18 +217,13 @@ router.post("/modify", async (request, response) => {
       where: { recordId: data.map((x) => x.recordId) },
     });
     const userid = request.headers["userid"];
-    const contestMap = new Map<string, boolean>();
-    const asyncEvery = async <T>(
-      arr: T[],
-      fn: (element: T) => Promise<boolean>
-    ) => {
-      for (let s of arr) if (!(await fn(s))) return false;
-      return true;
-    };
-    if (
-      !(await asyncEvery(datas, async (x) => {
-        if (checkPermission(userid, x.playerId)) return true;
+
+    // 检查是否具有修改权限
+    {
+      const contestMap = new Map<string, boolean>();
+      for (let x of datas) {
         if (!contestMap.has(x.contestId)) {
+          // 缓存结果，避免多次检索权限
           try {
             const svalue = await ContestModel.findOne({
               where: { contestId: x.contestId },
@@ -181,17 +236,19 @@ router.post("/modify", async (request, response) => {
             contestMap.set(x.contestId, false);
           }
         }
-        return contestMap.get(x.contestId);
-      }))
-    )
-      return response.json({
-        code: errorcode.NO_PERMISSION,
-        msg: tips.NO_PERMISSION,
-      });
+        if (!contestMap.get(x.contestId))
+          return response.json({
+            code: errorcode.NO_PERMISSION,
+            msg: tips.NO_PERMISSION,
+          });
+      }
+    }
+
     for (let x of datas) {
-      const [playerId, score] = dataMap.get(x.recordId.toString());
+      const [playerId, score, content] = dataMap.get(x.recordId.toString());
       if (playerId != null) x.set("playerId", playerId);
       if (score != null) x.set("score", score);
+      if (content != null) x.set("content", content);
       await x.save();
     }
     return response.json({
@@ -215,6 +272,13 @@ router.get("/query", async (request, response) => {
   try {
     const datas = await RecordModel.findAll({
       where: { recordId: recordIds },
+      include: [
+        {
+          model: UserModel,
+          as: "userTable",
+          attributes: ["userId", "nickname"],
+        },
+      ],
     });
     return response.json({
       code: errorcode.SUCCESS,
@@ -224,6 +288,8 @@ router.get("/query", async (request, response) => {
         contestId: x.contestId,
         playerId: x.playerId,
         score: x.score,
+        content: x.content,
+        playerNickname: ((x as any).userTable as UserModel)?.nickname,
       })),
     });
   } catch (e) {
@@ -283,6 +349,7 @@ router.get("/list", async (request, response) => {
         contestId: x.contestId,
         playerId: x.playerId,
         score: x.score,
+        content: x.content,
         playerNickname: ((x as any).userTable as UserModel)?.nickname,
       })),
     });

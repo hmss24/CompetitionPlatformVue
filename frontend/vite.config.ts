@@ -3,6 +3,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+// const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
 
 const proxy: any = {}
 try {
@@ -20,8 +21,8 @@ if (proxy['/api'] == null)
     rewrite: (path: string) => path.replace(/^\/api/, '')
   }
 
-// https://vitejs.dev/config/
 export default defineConfig({
+  // new MonacoWebpackPlugin({ languages: ['javascript', 'typescript'] })
   plugins: [vue(), vueJsx()],
   resolve: {
     alias: {

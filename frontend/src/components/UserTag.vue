@@ -6,7 +6,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{nickname?: string, userId?: string|number}>();
+const props = defineProps<{ nickname?: string; userId?: string | number }>()
 </script>
 
 <style scoped>

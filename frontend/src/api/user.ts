@@ -23,7 +23,7 @@ export async function apiUserSignup(conf: {
     throw new APIError('密码非法\n长度8-50，必须至少含有1个大写字母，1个小写字母和1个数字')
   if (email != null && !checkEmail(email)) throw new APIError('邮箱非法')
   if (description != null && !checkLongString(description)) throw new APIError('描述非法')
-  await request.get('/user/signup', { params: conf })
+  await request.post('/user/signup', conf)
 }
 
 export async function apiUserLogin(conf: { username: string; password: string }) {

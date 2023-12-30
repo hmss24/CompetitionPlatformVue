@@ -298,7 +298,9 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const { contestId, playerId, _limit, _offset, order } = request.query;
+  const { contestId, playerId, order } = request.query;
+  const _limit = request.query.limit;
+  const _offset = request.query.offset;
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
 

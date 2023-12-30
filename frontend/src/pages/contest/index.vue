@@ -1,14 +1,11 @@
 <template>
   <NavBar>
     <NSpace justify="space-between" align="center">
-    <NH1>
-      比赛列表
-    </NH1>
-    <NSpace justify="end" style="margin-bottom: 16px">
-      <NButton color="#5d5cde" round @click="() => $router.push(`/contest/add`)">添加</NButton>
-      <NButton color="#4caf50" round @click="() => doRefresh()">刷新</NButton>
-    </NSpace>
-
+      <NH1> 比赛列表 </NH1>
+      <NSpace justify="end" style="margin-bottom: 16px">
+        <NButton color="#5d5cde" round @click="() => $router.push(`/contest/add`)">添加</NButton>
+        <NButton color="#4caf50" round @click="() => doRefresh()">刷新</NButton>
+      </NSpace>
     </NSpace>
     <NDataTable
       :columns="tableColumns"
@@ -36,7 +33,7 @@ import {
   useMessage,
   type DataTableSortState,
   type PaginationProps,
-NH1
+  NH1
 } from 'naive-ui'
 import { type SortOrder, type TableBaseColumn } from 'naive-ui/es/data-table/src/interface'
 import { onMounted, reactive, ref } from 'vue'
@@ -63,7 +60,7 @@ const doRefresh = async (page?: number, pageSize?: number, newColumns?: any) => 
     if (pageSize == undefined) pageSize = paginationReactive.pageSize as number
     const ret = await apiContestList({
       limit: pageSize,
-      offset: page * pageSize,
+      offset: (page - 1) * pageSize,
       order
     })
     data.value = ret.data

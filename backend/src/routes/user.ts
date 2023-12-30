@@ -223,14 +223,17 @@ router.get("/query", async (request, response) => {
 
 router.get("/list", async (request, response) => {
   const opt: Omit<FindAndCountOptions<any>, "group"> = {};
-  const { nickname, _offset, _limit } = request.query;
+  const nickname = request.query.nickname;
+  const _offset = request.query.offset;
+  const _limit = request.query.limit;
 
   if (typeof nickname == "string") {
-    if (nickname.length > 1 && !checkShortString(nickname)) return response.json(makeArgumentsError());
+    if (nickname.length > 1 && !checkShortString(nickname))
+      return response.json(makeArgumentsError());
     opt.where = { nickname: { [Op.like]: `%${nickname}%` } };
   } else if (nickname != null) return response.json(makeArgumentsError());
-  
-  if (typeof _limit == "number" || typeof _limit == 'string') {
+
+  if (typeof _limit == "number" || typeof _limit == "string") {
     const limit = +_limit;
     if (limit > QUERY_MAX_LIMIT || limit < 0 || isNaN(limit))
       return response.json(makeArgumentsError());
@@ -238,7 +241,7 @@ router.get("/list", async (request, response) => {
   } else if (_limit == null) opt.limit = 100;
   else return response.json(makeArgumentsError());
 
-  if (typeof _offset == "number" || typeof _offset == 'string') {
+  if (typeof _offset == "number" || typeof _offset == "string") {
     const offset = +_offset;
     if (offset < 0 || isNaN(offset)) return response.json(makeArgumentsError());
     opt.offset = offset;

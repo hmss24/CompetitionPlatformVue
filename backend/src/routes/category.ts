@@ -207,14 +207,15 @@ router.delete("/delete", async (request, response) => {
 router.get("/list", async (request, response) => {
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
-  const { userId, name, createdTime, updatedTime, _offset, _limit, order } =
-    request.query;
+  const { userId, name, createdTime, updatedTime, order } = request.query;
+  const _offset = request.query.offset;
+  const _limit = request.query.limit;
 
-  if (userId == null || userId === '') {
+  if (userId == null || userId === "") {
   } else if (checkBigInt(userId)) where.userId = userId;
   else return response.json(makeArgumentsError());
 
-  if (name == null || name === '') {
+  if (name == null || name === "") {
   } else if (checkShortString(name)) where.name = { [Op.like]: `%${name}%` };
   else return response.json(makeArgumentsError());
 

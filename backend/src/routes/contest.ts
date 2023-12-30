@@ -204,16 +204,10 @@ router.get("/query", async (request, response) => {
 });
 
 router.get("/list", async (request, response) => {
-  const {
-    userId,
-    categoryId,
-    title,
-    createdTime,
-    updatedTime,
-    _offset,
-    _limit,
-    order,
-  } = request.query;
+  const { userId, categoryId, title, createdTime, updatedTime, order } =
+    request.query;
+  const _offset = request.query.offset;
+  const _limit = request.query.limit;
   const where: any = {};
   const opt: Omit<FindAndCountOptions<any>, "group"> = { where };
 

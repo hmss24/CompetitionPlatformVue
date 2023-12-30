@@ -56,7 +56,7 @@
         <NSpace>
           <NButton :on-click="handleScriptModify">修改比赛数据形式</NButton>
           <NDropdown :options="[{ label: '从文件导入', key: 'importFromFile' }]">
-            <NButton :onclick="handleAddRecord">添加比赛</NButton>
+            <NButton :onclick="handleAddRecord">添加记录</NButton>
           </NDropdown>
         </NSpace>
       </NSpace>
